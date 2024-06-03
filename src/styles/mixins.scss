@@ -1,0 +1,55 @@
+$mobile-min: 0px;
+$mobile-max: 599px;
+$tablet-min: $mobile-max + 1;
+$tablet-max: 899px;
+$desktop-min: $tablet-max + 1;
+$desktop-max: 999999999999px;
+
+$vps: (
+	mobile: (min: $mobile-min, max: $mobile-max),
+	tablet: (min: $tablet-min, max: $tablet-max),
+	desktop: (min: $desktop-min, max: $desktop-max)
+);
+
+// sets styles depending on vp width, usage:
+// @include max-width(500px) { opacity: 0.5; }
+@mixin max-width($width) {
+	@media screen and (max-width: $width) { @content; }
+}
+@mixin min-width($width) {
+	@media screen and (min-width: $width) { @content; }
+}
+
+// set styles depending on viewport, usage:
+// @include vp-up(mobile) { opacity: 0.5; } // mobile and larger
+// @include vp-down(tablet) { opacity: 0.5; } // tablet and narrower
+// @include vp-only(desktop) { opacity: 0.5; } // only desktop
+@mixin vp-up($vp) {
+	@include min-width(map-get(map-get($vps, $vp), min)) { @content; }
+}
+@mixin vp-down($vp) {
+	@include max-width(map-get(map-get($vps, $vp), max)) { @content; }
+}
+@mixin vp-only($vp) {
+	@include vp-up($vp) {
+		@include vp-down($vp) {
+			@content;
+		}
+	}
+}
+
+// sets multiple styles per viewport, usage:
+// @include vp-css((color: (mobile: green, tablet: red, desktop: blue)));
+// equivalent to:
+// p {
+// 	color: green;
+// 	@include vp-up(tablet) { color: red; }
+// 	@include vp-up(desktop) { color: blue; }
+// }
+@mixin vp-css($map) {
+	@each $key, $styles in $map {
+		@each $vp, $value in $styles {
+			@include vp-up($vp) { #{$key}: $value; }
+		}
+	}
+}

@@ -1,0 +1,15 @@
+.address {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 2px;
+
+	img {
+		transition: transform 0.1s;
+		display: block;
+		position: relative;
+		top: -1px;
+
+		&:hover { transform: scale(1.1); }
+	}
+}

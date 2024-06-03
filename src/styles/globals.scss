@@ -1,0 +1,43 @@
+:root {
+	--mobile-min: #{$mobile-min};
+	--mobile-max: #{$mobile-max};
+	--tablet-min: #{$tablet-min};
+	--tablet-max: #{$tablet-max};
+	--desktop-min: #{$desktop-min};
+	--desktop-max: #{$desktop-max};
+	--text-green: #36b37e;
+	--text-purple: #523e8a;
+	--text-orange: #ff601c;
+}
+
+@each $color in (green purple orange) {
+	.text-#{"" + $color} { color: var(--text-#{$color}); }
+}
+
+@for $i from 0 through 9 {
+	.font-0-#{$i} { font-size: #{math.div($i, 10)}em; }
+	.font-1-#{$i} { font-size: #{1 + math.div($i, 10)}em; }
+}
+
+.text-center { text-align: center; }
+
+button.reset {
+	background: none;
+	padding: 0;
+	border: none;
+
+	&:hover { cursor: pointer; }
+}
+
+.flex {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.gradient-text {
+	background: var(--background);
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}

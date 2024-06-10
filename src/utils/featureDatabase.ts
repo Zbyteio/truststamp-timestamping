@@ -37,18 +37,4 @@ fdb.exec(`
   )
 `);
 
-// Function to print table contents
-const printTableContents = (tableName: string) => {
-  const stmt = fdb.prepare(`SELECT * FROM ${tableName}`);
-  const rows = stmt.all();
-  console.log(`Contents of ${tableName}:`, rows);
-};
-
-// Print the contents of the tables
-printTableContents('features');
-printTableContents('files');
-printTableContents('github_paths');
-
-console.log('Tables created successfully.');
-
 export default fdb;

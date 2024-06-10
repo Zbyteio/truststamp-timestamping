@@ -64,7 +64,12 @@ export default function SetupContainer() {
                 setLoading(false);
             };
 
-            checkIfDatabaseIsEmpty();
+            try {
+                checkIfDatabaseIsEmpty();
+            }
+            catch (err) {
+                console.log("No database");
+            }
         } else {
             // signOut();
             setLoading(false);
@@ -228,7 +233,7 @@ export default function SetupContainer() {
         console.log('Credentials stored and proceeding to the next step');
         setNextLoading(false);
         router.push('/feature');
-        
+
     };
 
     const handleReset = async () => {

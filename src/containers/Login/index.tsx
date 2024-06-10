@@ -14,15 +14,21 @@ export default function LoginContainer() {
 	useEffect(() => {
 
 		const routeIfLoggedIn = async () => {
-
+			console.log(status);
 			if (status === "authenticated" && session?.user?.email) {
 				const email = session.user.email;
 				if (publicKey && privateKey) {
-					if (await checkIfDatabaseIsEmpty(email)) {
-						router.push('/setup');
+					try {
+						if (await checkIfDatabaseIsEmpty(email)) {
+							router.push('/setup');
+						}
+						else{
+							router.push('/dashboard');
+						}
 					}
-					else{
-						router.push('/dashboard')
+					catch (err)
+					{
+						router.push('/setup');
 					}
 
 				}

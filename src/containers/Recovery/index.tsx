@@ -1,26 +1,41 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import styles from './RecoveryKeys.module.css';
 import logoTruststamp from '@/assets/icons/logoTruststamp.png';
 import { useKeys } from '@/context/KeysContext';
+import { Circles } from 'react-loader-spinner';
 
 const RecoveryContainer: React.FC = () => {
     const { publicKey, privateKey } = useKeys();
     const router = useRouter();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Check if keys are fetched
         if (publicKey && privateKey) {
             // If keys exist, redirect to setup page
-            //router.push('/setup');
+            router.push('/setup');
+        } else if (publicKey !== '' && privateKey !== '') {
+            // If keys are fetched but not valid
+            setLoading(false);
         }
     }, [publicKey, privateKey, router]);
 
     const handleNextClick = () => {
         router.push('/setup');
     };
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                <Circles color="#00BFFF" height={80} width={80} />
+                <p>Loading...</p>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>

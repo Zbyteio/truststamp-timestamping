@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './DashboardModal.module.css';
 import { AWSCredentials, FirebaseCredentials } from '@/containers/Dashboard';
 import { useKeys } from '@/context/KeysContext';
+import { useRouter } from 'next/navigation';
 
 interface Feature {
     id: number;
@@ -21,6 +22,7 @@ interface ModalProps {
 const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials, firebaseCredentials }) => {
     const [fileData, setFileData] = useState<any[]>([]);
     const { publicKey, privateKey } = useKeys();
+    const router = useRouter();
 
     useEffect(() => {
         fetchFileHashes();
@@ -29,7 +31,6 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
     const fetchFileHashes = async () => {
         const response = await fetch(`/api/wallet/getData?publicKey=${publicKey}&privateKey=${privateKey}`);
         const data = await response.json();
-        console.log(feature.files);
 
         const filePromises = feature.files.map(async (file) => {
             const onChainData = data.result.find((d: any) => d[2] === file.random);
@@ -69,6 +70,10 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };
 
+    const handleAddToFeature = () => {
+        router.push(`/feature?feature=${encodeURIComponent(JSON.stringify(feature))}&awsCredentials=${encodeURIComponent(JSON.stringify(awsCredentials))}&firebaseCredentials=${encodeURIComponent(JSON.stringify(firebaseCredentials))}`);
+    };
+
     return (
         <div className={styles.modal}>
             <div className={styles.modalContent}>
@@ -101,7 +106,7 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
                         ))}
                     </tbody>
                 </table>
-                <button className={styles.addButton}>Add to feature</button>
+                <button className={styles.addButton} onClick={handleAddToFeature}>Add to feature</button>
             </div>
         </div>
     );

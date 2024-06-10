@@ -21,21 +21,22 @@ export default function LoginContainer() {
 			if (status === "authenticated" && session?.user?.email) {
 				const email = session.user.email;
 				if (publicKey && privateKey) {
-
 					if (await checkIfDatabaseIsEmpty(email)) {
 						router.push('/setup');
 					}
 					else{
-						//Add router push to dashboard
+						router.push('/dashboard')
 					}
 
 				}
 				else {
-					router.push('/setup');
+					router.push('/recovery');
 				}
 			}
 
 		};
+
+		routeIfLoggedIn();
 	});
 
 	const checkIfDatabaseIsEmpty = async (email: string) => {

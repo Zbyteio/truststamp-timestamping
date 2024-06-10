@@ -8,7 +8,9 @@ import firebaseIcon from '@/assets/icons/firebaseIcon.png'; // Adjust the paths 
 import s3Icon from '@/assets/icons/s3Icon.png'; // Adjust the paths if necessary
 import PasswordPopup from '@/components/PasswordPopup';
 import { useSession, signOut } from 'next-auth/react';
-import Router from 'next/router';
+import { Circles } from 'react-loader-spinner';
+import Router from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 type Bucket = {
     Name: string;
@@ -39,30 +41,33 @@ export default function SetupContainer() {
     const [selectedBucket, setSelectedBucket] = useState('');
     const [loadedBucket, setLoadedBucket] = useState('');
     const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(true);
+    const [githubLoading, setGithubLoading] = useState(false);
+    const [connectionLoading, setConnectionLoading] = useState(false);
+    const [nextLoading, setNextLoading] = useState(false);
+    const [resetLoading, setResetLoading] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
-        //TODO: dplat hard check to ensure email isn't being changed via localStorage
-
         if (status === 'authenticated' && session?.user?.email) {
             const email = session.user.email;
             setEmail(email);
-            console.log(email);
 
             const checkIfDatabaseIsEmpty = async () => {
                 const response = await fetch(`/api/database/checkDatabaseEmpty?email=${encodeURIComponent(email)}`);
                 const data = await response.json();
                 setIsDatabaseEmpty(data.empty);
-                console.log(data.empty);
 
                 if (!data.empty) {
                     setShowPasswordPopup(true);
                 }
+                setLoading(false);
             };
 
             checkIfDatabaseIsEmpty();
-        }
-        else {
-            //signOut();
+        } else {
+            // signOut();
+            setLoading(false);
         }
     }, [status, email]);
 
@@ -74,10 +79,8 @@ export default function SetupContainer() {
 
     const loadCredentials = async (submittedPassword: string) => {
         const savedGithubToken = await fetchCredential('github', 'token', submittedPassword);
-        console.log(savedGithubToken);
         const savedGithubId = await fetchCredential('github', 'id', submittedPassword);
         const savedAccessKey = await fetchCredential('aws', 'accessKey', submittedPassword);
-        console.log(savedAccessKey);
         const savedSecretKey = await fetchCredential('aws', 'secretKey', submittedPassword);
         const savedBucket = await fetchCredential('database', 'bucket', submittedPassword);
         const savedDatabaseUrl = await fetchCredential('firebase', 'databaseUrl', submittedPassword);
@@ -122,6 +125,7 @@ export default function SetupContainer() {
     };
 
     const handleTestConnection = async () => {
+        setConnectionLoading(true);
         try {
             let response, result;
             if (selectedService === 'aws') {
@@ -176,10 +180,13 @@ export default function SetupContainer() {
             const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
             setConnectionStatus(`Connection failed: ${errorMessage}`);
             setConnectionStatusStyle({ color: 'red' });
+        } finally {
+            setConnectionLoading(false);
         }
     };
 
     const handleNext = async () => {
+        setNextLoading(true);
         const storeCredential = async (service: string, key: string, value: string, password: string) => {
             await fetch('/api/database/credentials', {
                 method: 'POST',
@@ -191,7 +198,7 @@ export default function SetupContainer() {
         };
 
         const storePassword = async (email: string, password: string) => {
-            const response = await fetch('/api/database/password', {
+            await fetch('/api/database/password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -215,14 +222,17 @@ export default function SetupContainer() {
         }
         await storeCredential('database', 'bucket', selectedBucket, password);
         await storeCredential('timestampFrequency', 'value', timestampFrequency, password);
-        
+
         await storePassword(email, password);
 
-
         console.log('Credentials stored and proceeding to the next step');
+        setNextLoading(false);
+        router.push('/feature');
+        
     };
 
     const handleReset = async () => {
+        setResetLoading(true);
         await fetch('/api/database/credentials', {
             method: 'DELETE',
             headers: {
@@ -247,9 +257,11 @@ export default function SetupContainer() {
         setPassword('');
         setLoadedBucket('');
         console.log('Credentials reset successfully');
+        setResetLoading(false);
     };
 
     const handleGithubTestConnection = async () => {
+        setGithubLoading(true);
         try {
             const response = await fetch('/api/github/checkPAT', {
                 method: 'POST',
@@ -277,6 +289,8 @@ export default function SetupContainer() {
             const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
             setGithubConnectionStatus(`Connection failed: ${errorMessage}`);
             setGithubConnectionStatusStyle({ color: 'red' });
+        } finally {
+            setGithubLoading(false);
         }
     };
 
@@ -406,6 +420,15 @@ export default function SetupContainer() {
         </div>
     );
 
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                <Circles color="#00BFFF" height={80} width={80} />
+                <p>Loading...</p>
+            </div>
+        );
+    }
+
     return (
         <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif', backgroundColor: '#f7f1fc', minHeight: '100vh' }}>
             {showPasswordPopup && <PasswordPopup onClose={() => setShowPasswordPopup(false)} onSubmit={handlePasswordSubmit} />}
@@ -435,8 +458,14 @@ export default function SetupContainer() {
                         />
                         <Tooltip id="githubTokenTip" place="top" />
                     </div>
-                    <button onClick={handleGithubTestConnection} style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-                        Test
+                    <button onClick={handleGithubTestConnection} style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', position: 'relative' }}>
+                        {githubLoading ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Circles color="#FFF" height={20} width={20} />
+                            </div>
+                        ) : (
+                            'Test'
+                        )}
                     </button>
                     {githubConnectionStatus && <p style={githubConnectionStatusStyle}>{githubConnectionStatus}</p>}
                 </div>
@@ -460,8 +489,14 @@ export default function SetupContainer() {
                     </div>
                     {renderServiceForm()}
                     {selectedService && (
-                        <button onClick={handleTestConnection} style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-                            Test
+                        <button onClick={handleTestConnection} style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', position: 'relative' }}>
+                            {connectionLoading ? (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Circles color="#FFF" height={20} width={20} />
+                                </div>
+                            ) : (
+                                'Test'
+                            )}
                         </button>
                     )}
                     {connectionStatus && <p style={connectionStatusStyle}>{connectionStatus}</p>}
@@ -515,9 +550,16 @@ export default function SetupContainer() {
                             (selectedService === 'aws' && !selectedBucket)
                             ? 0.5
                             : 1,
+                        position: 'relative',
                     }}
                 >
-                    Next
+                    {nextLoading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Circles color="#FFF" height={20} width={20} />
+                        </div>
+                    ) : (
+                        'Next'
+                    )}
                 </button>
 
                 {!isDatabaseEmpty && (
@@ -531,13 +573,20 @@ export default function SetupContainer() {
                             borderRadius: '5px',
                             cursor: 'pointer',
                             display: 'block',
-                            margin: '20px auto 0 auto'
+                            margin: '20px auto 0 auto',
+                            position: 'relative',
                         }}
                     >
-                        Erase Stored Values and Reset
+                        {resetLoading ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Circles color="#FFF" height={20} width={20} />
+                            </div>
+                        ) : (
+                            'Erase Stored Values and Reset'
+                        )}
                     </button>
                 )}
             </div>
         </div>
     );
-};
+}

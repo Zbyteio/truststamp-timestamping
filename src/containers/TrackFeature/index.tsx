@@ -6,6 +6,9 @@ import { useSession } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID for random file names
 import JSZip from 'jszip'; // Import JSZip for zipping files
 import { useKeys } from '@/context/KeysContext';
+import { Feature, AWSCredentials, FirebaseCredentials } from '@/containers/Dashboard';
+import { Circles } from 'react-loader-spinner';
+import { useRouter } from 'next/navigation';
 
 interface Repository {
     id: number;
@@ -33,7 +36,14 @@ interface FileItem extends FileStructure {
     expanded?: boolean;
 }
 
+interface TrackFeatureProps {
+    feature?: Feature;
+    awsCredentials?: AWSCredentials | null;
+    firebaseCredentials?: FirebaseCredentials | null;
+}
+
 export default function TrackFeatureContainer() {
+    const router = useRouter();
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -52,13 +62,24 @@ export default function TrackFeatureContainer() {
     const { data: session, status } = useSession();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { publicKey, privateKey } = useKeys();
+    const [loading, setLoading] = useState(true);
+    const [orgLoading, setOrgLoading] = useState(false);
+    const [repoLoading, setRepoLoading] = useState(false);
+    const [branchLoading, setBranchLoading] = useState(false);
+    const [fileLoading, setFileLoading] = useState(false);
+    const [submitLoading, setSubmitLoading] = useState(false);
 
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const featureParam = params.get('feature');
+        const awsCredentialsParam = params.get('awsCredentials');
+        const firebaseCredentialsParam = params.get('firebaseCredentials');
+
         if (status === 'authenticated' && session?.user?.email) {
             const email = session.user.email;
             setEmail(email);
 
-            const getPassword = async () => {
+            const initialize = async () => {
                 const response = await fetch(`/api/database/password?email=${email}`);
 
                 if (!response.ok) {
@@ -67,44 +88,66 @@ export default function TrackFeatureContainer() {
 
                 const data = await response.json();
                 setPassword(data.password);
-                fetchOrganizations(email, data.password);
+                await fetchOrganizations(email, data.password);
+                if (featureParam) {
+                    await setFeatureIfEditing(featureParam);
+                }
+                setLoading(false);
             };
 
-            getPassword();
+            initialize();
+        } else {
+            setLoading(false);
         }
     }, [status, session]);
 
+    const setFeatureIfEditing = async (feature: string) => {
+        const featureValues = JSON.parse(feature);
+        setTitle(featureValues.title);
+        setDescription(featureValues.description);
+    }
+
     const fetchOrganizations = async (email: string, password: string) => {
+        setOrgLoading(true);
         try {
             const response = await fetch(`/api/github/organizations?email=${email}&password=${password}`);
             const data = await response.json();
             setOrganizations(data);
         } catch (error) {
             console.error('Error fetching organizations:', error);
+        } finally {
+            setOrgLoading(false);
         }
     };
 
     const fetchRepositories = async (org: string) => {
+        setRepoLoading(true);
         try {
             const response = await fetch(`/api/github/repositories?email=${email}&password=${password}&org=${org}`);
             const data = await response.json();
             setRepositories(data);
         } catch (error) {
             console.error('Error fetching repositories:', error);
+        } finally {
+            setRepoLoading(false);
         }
     };
 
     const fetchBranches = async (repository: string) => {
+        setBranchLoading(true);
         try {
             const response = await fetch(`/api/github/branches?repository=${repository}&email=${email}&password=${password}`);
             const data = await response.json();
             setBranches(data);
         } catch (error) {
             console.error('Error fetching branches:', error);
+        } finally {
+            setBranchLoading(false);
         }
     };
 
     const fetchFileStructure = async (repository: string, branch: string, path = '') => {
+        setFileLoading(true);
         try {
             const response = await fetch(`/api/github/contents?email=${email}&password=${password}&repository=${repository}&branch=${branch}&path=${path}`);
             const data = await response.json();
@@ -115,6 +158,8 @@ export default function TrackFeatureContainer() {
             }
         } catch (error) {
             console.error('Error fetching file structure:', error);
+        } finally {
+            setFileLoading(false);
         }
     };
 
@@ -227,6 +272,7 @@ export default function TrackFeatureContainer() {
     };
 
     const handleSubmit = async () => {
+        setSubmitLoading(true);
         try {
             // Generate random names for uploaded files
             const randomizedFiles = uploadedFiles.map(file => ({
@@ -283,8 +329,11 @@ export default function TrackFeatureContainer() {
             }
 
             console.log('Feature tracked successfully');
+            router.push('/dashboard');
         } catch (error) {
             console.error('Error handling submit:', error);
+        } finally {
+            setSubmitLoading(false);
         }
     };
 
@@ -320,9 +369,6 @@ export default function TrackFeatureContainer() {
             console.error('Error hashing and publishing file:', error);
         }
     };
-
-
-
 
     const renderFileStructure = (files: FileItem[]) => {
         return files.map((file) => (
@@ -471,6 +517,14 @@ export default function TrackFeatureContainer() {
         }
     };
 
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                <Circles color="#00BFFF" height={80} width={80} />
+                <p>Loading...</p>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>
@@ -524,51 +578,81 @@ export default function TrackFeatureContainer() {
                 <div className={styles.columns}>
                     <div className={`${styles.selectOrganizations} ${styles.listContainer}`}>
                         <h2>Select Organization</h2>
-                        <ul>
-                            {organizations.map((org, index) => (
-                                <li key={index} onClick={() => handleOrgSelect(org)} style={{ cursor: 'pointer', margin: '10px 0' }}>
-                                    {org}
-                                </li>
-                            ))}
-                        </ul>
+                        {orgLoading ? (
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <Circles color="#00BFFF" height={40} width={40} />
+                            </div>
+                        ) : (
+                            <ul>
+                                {organizations.map((org, index) => (
+                                    <li key={index} onClick={() => handleOrgSelect(org)} style={{ cursor: 'pointer', margin: '10px 0' }}>
+                                        {org}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                     {selectedOrg && (
                         <div className={`${styles.selectRepositories} ${styles.listContainer}`}>
                             <h3>Repositories for {selectedOrg}</h3>
-                            <div className={styles.repositoryList}>
-                                {repositories.map((repo) => (
-                                    <div key={repo.id} className={styles.repository} onClick={() => handleRepoSelect(repo.full_name)}>
-                                        <span>{repo.name}</span>
-                                    </div>
-                                ))}
-                            </div>
+                            {repoLoading ? (
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Circles color="#00BFFF" height={40} width={40} />
+                                </div>
+                            ) : (
+                                <div className={styles.repositoryList}>
+                                    {repositories.map((repo) => (
+                                        <div key={repo.id} className={styles.repository} onClick={() => handleRepoSelect(repo.full_name)}>
+                                            <span>{repo.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                     {selectedRepository && (
                         <div className={`${styles.selectBranches} ${styles.listContainer}`}>
                             <h3>Branches for {selectedRepository}</h3>
-                            <div className={styles.branchList}>
-                                {branches.map((branch) => (
-                                    <div key={branch.name} className={styles.branch} onClick={() => handleBranchChange(branch.name)}>
-                                        <span>{branch.name}</span>
-                                    </div>
-                                ))}
-                            </div>
+                            {branchLoading ? (
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Circles color="#00BFFF" height={40} width={40} />
+                                </div>
+                            ) : (
+                                <div className={styles.branchList}>
+                                    {branches.map((branch) => (
+                                        <div key={branch.name} className={styles.branch} onClick={() => handleBranchChange(branch.name)}>
+                                            <span>{branch.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                     {selectedBranch && (
                         <div className={`${styles.selectFiles} ${styles.listContainer}`}>
                             <h3>Files for {selectedBranch}</h3>
-                            <div className={styles.fileList}>
-                                {renderFileStructure(fileStructure)}
-                            </div>
+                            {fileLoading ? (
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <Circles color="#00BFFF" height={40} width={40} />
+                                </div>
+                            ) : (
+                                <div className={styles.fileList}>
+                                    {renderFileStructure(fileStructure)}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
+                <button className={styles.chooseFilesBtn} onClick={handleSubmit} disabled={submitLoading}>
+                    {submitLoading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Circles color="#FFF" height={20} width={20} />
+                        </div>
+                    ) : (
+                        'Submit'
+                    )}
+                </button>
             </div>
-            <button className={styles.submitButton} onClick={handleSubmit}>
-                Submit
-            </button>
         </div>
     );
 }

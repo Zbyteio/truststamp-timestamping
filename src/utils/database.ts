@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const dbPath = path.resolve(process.cwd(), 'secure-data.db');
+const dbPath = path.resolve(process.cwd(), 'users-data.db');
 const db = new Database(dbPath, { verbose: console.log });
 
 // Create a table for storing users if it doesn't exist

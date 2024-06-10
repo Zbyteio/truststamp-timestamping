@@ -190,6 +190,19 @@ export default function SetupContainer() {
             });
         };
 
+        const storePassword = async (email: string, password: string) => {
+            const response = await fetch('/api/database/password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    plainPassword: password
+                })
+            });
+        };
+
         // Store credentials when the "Next" button is clicked
         await storeCredential('github', 'token', githubToken, password);
         await storeCredential('github', 'id', githubId, password);
@@ -202,6 +215,9 @@ export default function SetupContainer() {
         }
         await storeCredential('database', 'bucket', selectedBucket, password);
         await storeCredential('timestampFrequency', 'value', timestampFrequency, password);
+        
+        await storePassword(email, password);
+
 
         console.log('Credentials stored and proceeding to the next step');
     };
@@ -229,12 +245,13 @@ export default function SetupContainer() {
         setGithubConnectionStatusStyle({});
         setIsDatabaseEmpty(true);
         setPassword('');
+        setLoadedBucket('');
         console.log('Credentials reset successfully');
     };
 
     const handleGithubTestConnection = async () => {
         try {
-            const response = await fetch('/api/github', {
+            const response = await fetch('/api/github/checkPAT', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -406,7 +423,7 @@ export default function SetupContainer() {
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                         <input
                             type="password"
-                            placeholder="Github Personal Access Token"
+                            placeholder="Organization Personal Access Token"
                             value={githubToken}
                             onChange={(e) => setGithubToken(e.target.value)}
                             style={{ flex: 1, padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}

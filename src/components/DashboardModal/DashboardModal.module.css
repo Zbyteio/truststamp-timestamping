@@ -1,0 +1,98 @@
+/* DashboardModal.module.css */
+
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modalContent {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 1200px;
+    position: relative;
+    overflow: auto;
+    max-height: 90%;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.modalTitle {
+    font-size: 24px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.description {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.filesHeader {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.fileTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.fileTable th, .fileTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.fileTable th {
+    background-color: #f2f2f2;
+}
+
+.fileTable td a {
+    color: #a020f0;
+    text-decoration: none;
+}
+
+.fileTable td a:hover {
+    text-decoration: underline;
+}
+
+.fileTable td {
+    font-size: 12px;
+}
+
+.addButton {
+    background-color: #a020f0;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.addButton:hover {
+    background-color: #7a16c0;
+}

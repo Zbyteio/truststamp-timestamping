@@ -1,0 +1,69 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f7f8fc;
+    padding: 20px;
+}
+
+.logoContainer {
+    margin-bottom: 20px;
+}
+
+.recoveryContainer {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+}
+
+.heading {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    color: #333333;
+}
+
+.instructions {
+    font-size: 1rem;
+    margin-bottom: 20px;
+    color: #555555;
+}
+
+.keysContainer {
+    background-color: #f2f4f7;
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #333333;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.keysContainer p {
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+.keysContainer p:last-child {
+    margin-bottom: 0;
+}
+
+.nextButton {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.nextButton:hover {
+    background-color: #45a049;
+}

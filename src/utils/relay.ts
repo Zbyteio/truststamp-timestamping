@@ -5,7 +5,7 @@ interface RelayOptions {
 	nativeChainId?: number;
 }
 
-export default function relay(walletCore, relayOptions: RelayOptions = {}) {
+export default function relay(walletCore: any, relayOptions: RelayOptions = {}) {
 	const DEFAULT_RELAY_OPTIONS = { relayBaseURL: 'https://dplat.zbyte.io/relay/v1' };
 	const options = { ...DEFAULT_RELAY_OPTIONS, ...relayOptions };
 	options.nativeChainId ||= walletCore.getNetwork().chainId;

@@ -1,0 +1,110 @@
+import React, { useState, useEffect } from 'react';
+import styles from './DashboardModal.module.css';
+import { AWSCredentials, FirebaseCredentials } from '@/containers/Dashboard';
+import { useKeys } from '@/context/KeysContext';
+
+interface Feature {
+    id: number;
+    title: string;
+    description: string;
+    files: { originalName: string, random: string, transactionHash: string }[];
+    githubPaths: { path: string, type: string }[];
+}
+
+interface ModalProps {
+    feature: Feature;
+    onClose: () => void;
+    awsCredentials: AWSCredentials | null;
+    firebaseCredentials: FirebaseCredentials | null;
+}
+
+const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials, firebaseCredentials }) => {
+    const [fileData, setFileData] = useState<any[]>([]);
+    const { publicKey, privateKey } = useKeys();
+
+    useEffect(() => {
+        fetchFileHashes();
+    }, [feature]);
+
+    const fetchFileHashes = async () => {
+        const response = await fetch(`/api/wallet/getData?publicKey=${publicKey}&privateKey=${privateKey}`);
+        const data = await response.json();
+        console.log(feature.files);
+
+        const filePromises = feature.files.map(async (file) => {
+            const onChainData = data.result.find((d: any) => d[2] === file.random);
+            if (!onChainData) return null;
+
+            const explorerLink = `https://polygonscan.com/tx/${file.transactionHash}`;
+            const onChainHash = onChainData[1];
+            const blockTime = parseInt(onChainData[3].hex, 16);
+
+            const fileHash = await fetchAndHashFile(file.random);
+
+            return {
+                originalName: file.originalName,
+                transactionHash: explorerLink,
+                computedHash: fileHash,
+                onChainHash: onChainHash,
+                timestampDate: new Date(blockTime * 1000).toLocaleDateString(),
+                timestampTime: new Date(blockTime * 1000).toLocaleTimeString(),
+            };
+        });
+
+        const results = await Promise.all(filePromises);
+        setFileData(results.filter((result) => result !== null));
+    };
+
+    const fetchAndHashFile = async (fileName: string) => {
+        const url = awsCredentials
+            ? `/api/aws/getFile?fileName=${fileName}&accessKey=${awsCredentials.accessKey}&secretKey=${awsCredentials.secretKey}&bucket=${awsCredentials.bucket}`
+            : `/api/firebase/getFile?fileName=${fileName}&databaseUrl=${firebaseCredentials?.databaseUrl}&serviceAccount=${firebaseCredentials?.serviceAccount}&bucket=${firebaseCredentials?.bucket}`;
+
+        const response = await fetch(url);
+        const fileBase64 = await response.json();
+        const fileBuffer = Buffer.from(fileBase64.file, 'base64');
+
+        const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    return (
+        <div className={styles.modal}>
+            <div className={styles.modalContent}>
+                <span className={styles.close} onClick={onClose}>&times;</span>
+                <h2 className={styles.modalTitle}>{feature.title}</h2>
+                <p className={styles.description}>{feature.description}</p>
+                <h3 className={styles.filesHeader}>Files</h3>
+                <table className={styles.fileTable}>
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Hash Details</th>
+                            <th>Timestamping date</th>
+                            <th>Timestamping time</th>
+                            <th>View on Blockchain</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {fileData.map((file, index) => (
+                            <tr key={index}>
+                                <td>{file.originalName}</td>
+                                <td>
+                                    <div>On-chain hash: {file.onChainHash}</div>
+                                    <div>Hash from database: {file.computedHash}</div>
+                                </td>
+                                <td>{file.timestampDate}</td>
+                                <td>{file.timestampTime}</td>
+                                <td><a href={file.transactionHash} target="_blank" rel="noopener noreferrer">Link</a></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <button className={styles.addButton}>Add to feature</button>
+            </div>
+        </div>
+    );
+};
+
+export default DashboardModal;

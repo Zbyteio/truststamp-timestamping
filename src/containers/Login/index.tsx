@@ -6,16 +6,49 @@ import AuthButton from '@/components/AuthButton';
 import logo from '@/assets/images/logo.svg';
 import keycloakIcon from '@/assets/icons/keycloak-svgrepo-com.svg';
 import './style.scss';
-import router from 'next/router';
+import { useRouter } from 'next/navigation';
+import { useKeys } from '@/context/KeysContext';
 
 export default function LoginContainer() {
 	const { data: session, status } = useSession();
+	const { publicKey, privateKey } = useKeys();
+	const router = useRouter();
 
 	useEffect(() => {
 
-		console.log(session?.user?.email);
-		console.log(status);
+		const routeIfLoggedIn = async () => {
+
+			if (status === "authenticated" && session?.user?.email) {
+				const email = session.user.email;
+				if (publicKey && privateKey) {
+
+					if (await checkIfDatabaseIsEmpty(email)) {
+						router.push('/setup');
+					}
+					else{
+						//Add router push to dashboard
+					}
+
+				}
+				else {
+					router.push('/setup');
+				}
+			}
+
+		};
 	});
+
+	const checkIfDatabaseIsEmpty = async (email: string) => {
+		const response = await fetch(`/api/database/checkDatabaseEmpty?email=${encodeURIComponent(email)}`);
+		const data = await response.json();
+
+		if (data.empty) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
 
 	const authRedirect = async (idp?: string) => {
 		try {

@@ -1,10 +1,7 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useSession, signIn, signOut, getSession } from 'next-auth/react';
 import Image from 'next/image';
-import { Button, Typography } from 'antd';
-import AuthButton from '@/components/AuthButton';
 import logo from '@/assets/images/logo.svg';
-import keycloakIcon from '@/assets/icons/keycloak-svgrepo-com.svg';
 import './style.scss';
 import { useRouter } from 'next/navigation';
 import { useKeys } from '@/context/KeysContext';

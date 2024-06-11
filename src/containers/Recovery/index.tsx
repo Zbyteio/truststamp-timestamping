@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -45,7 +43,12 @@ const RecoveryContainer: React.FC = () => {
                 </p>
                 <div className={styles.keysContainer}>
                     <p><strong>Public Key:</strong> {publicKey}</p>
-                    <p><strong>Private Key:</strong> {privateKey}</p>
+                    <p><strong>Private Key:</strong></p>
+                    <div className={styles.privateKeyContainer}>
+                        {privateKey.split('').map((char, index) => (
+                            <span key={index}>{char}</span>
+                        ))}
+                    </div>
                 </div>
                 <button className={styles.nextButton} onClick={handleNextClick}>Next</button>
             </div>

@@ -12,6 +12,13 @@
     margin-bottom: 20px;
 }
 
+.privateKeyContainer {
+    white-space: pre-wrap;
+    max-height: 200px; /* Adjust the height as needed */
+    overflow-y: auto;
+}
+
+
 .recoveryContainer {
     background-color: #ffffff;
     padding: 30px;

@@ -14,11 +14,7 @@ const RecoveryContainer: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check if keys are fetched
-        if (publicKey && privateKey) {
-            // If keys exist, redirect to setup page
-            router.push('/setup');
-        } else if (publicKey !== '' && privateKey !== '') {
+        if (publicKey !== '' && privateKey !== '') {
             // If keys are fetched but not valid
             setLoading(false);
         }

@@ -20,7 +20,7 @@ export default function LoginContainer() {
 				if (publicKey && privateKey) {
 					try {
 						if (await checkIfDatabaseIsEmpty(email)) {
-							router.push('/recovery');
+							router.push('/setup');
 						}
 						else{
 							router.push('/dashboard');
@@ -28,7 +28,7 @@ export default function LoginContainer() {
 					}
 					catch (err)
 					{
-						router.push('/setup');
+						router.push('/recovery');
 					}
 
 				}

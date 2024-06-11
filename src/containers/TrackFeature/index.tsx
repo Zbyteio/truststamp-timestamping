@@ -81,6 +81,9 @@ export default function TrackFeatureContainer() {
             setEmail(email);
 
             const initialize = async () => {
+                try 
+                {
+
                 const response = await fetch(`/api/database/password?email=${email}`);
 
                 if (!response.ok) {
@@ -94,6 +97,11 @@ export default function TrackFeatureContainer() {
                     await setFeatureIfEditing(featureParam);
                 }
                 setLoading(false);
+            }
+            catch (err)
+            {
+                router.push('/setup')
+            }
             };
 
             initialize();

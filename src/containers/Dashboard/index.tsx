@@ -49,20 +49,27 @@ export default function DashboardComponent() {
             const email = session.user.email;
             setEmail(email);
 
-            const getPassword = async () => {
-                setIsLoading(true);
-                const response = await fetch(`/api/database/password?email=${email}`);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch decrypted password: ${response.statusText}`);
-                }
-                const data = await response.json();
-                setPassword(data.password);
-                await loadCredentials(email, data.password);
-                await fetchFeatures(email);
-                setIsLoading(false);
-            };
+            try {
+                const getPassword = async () => {
+                    setIsLoading(true);
+                    const response = await fetch(`/api/database/password?email=${email}`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch decrypted password: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    setPassword(data.password);
+                    await loadCredentials(email, data.password);
+                    await fetchFeatures(email);
+                    setIsLoading(false);
 
-            getPassword().catch(() => setIsLoading(false));
+                    getPassword().catch(() => setIsLoading(false));
+                };
+            }
+            catch (err)
+            {
+                router.push('/setup');
+            }
+
         }
     }, [status, session]);
 

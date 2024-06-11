@@ -16,6 +16,13 @@
     height: auto;
 }
 
+.loaderContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
 .addButton {
     background-color: #a020f0;
     color: white;

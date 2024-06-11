@@ -3,6 +3,7 @@ import styles from './DashboardModal.module.css';
 import { AWSCredentials, FirebaseCredentials } from '@/containers/Dashboard';
 import { useKeys } from '@/context/KeysContext';
 import { useRouter } from 'next/navigation';
+import { Circles } from 'react-loader-spinner';
 
 interface Feature {
     id: number;
@@ -21,6 +22,7 @@ interface ModalProps {
 
 const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials, firebaseCredentials }) => {
     const [fileData, setFileData] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const { publicKey, privateKey } = useKeys();
     const router = useRouter();
 
@@ -29,6 +31,7 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
     }, [feature]);
 
     const fetchFileHashes = async () => {
+        setIsLoading(true);
         const response = await fetch(`/api/wallet/getData?publicKey=${publicKey}&privateKey=${privateKey}`);
         const data = await response.json();
 
@@ -54,6 +57,7 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
 
         const results = await Promise.all(filePromises);
         setFileData(results.filter((result) => result !== null));
+        setIsLoading(false);
     };
 
     const fetchAndHashFile = async (fileName: string) => {
@@ -81,31 +85,37 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
                 <h2 className={styles.modalTitle}>{feature.title}</h2>
                 <p className={styles.description}>{feature.description}</p>
                 <h3 className={styles.filesHeader}>Files</h3>
-                <table className={styles.fileTable}>
-                    <thead>
-                        <tr>
-                            <th>File</th>
-                            <th>Hash Details</th>
-                            <th>Timestamping date</th>
-                            <th>Timestamping time</th>
-                            <th>View on Blockchain</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {fileData.map((file, index) => (
-                            <tr key={index}>
-                                <td>{file.originalName}</td>
-                                <td>
-                                    <div>On-chain hash: {file.onChainHash}</div>
-                                    <div>Hash from database: {file.computedHash}</div>
-                                </td>
-                                <td>{file.timestampDate}</td>
-                                <td>{file.timestampTime}</td>
-                                <td><a href={file.transactionHash} target="_blank" rel="noopener noreferrer">Link</a></td>
+                {isLoading ? (
+                    <div className={styles.loaderContainer}>
+                        <Circles height="100" width="100" color="#4fa94d" ariaLabel="loading" />
+                    </div>
+                ) : (
+                    <table className={styles.fileTable}>
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Hash Details</th>
+                                <th>Timestamping date</th>
+                                <th>Timestamping time</th>
+                                <th>View on Blockchain</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {fileData.map((file, index) => (
+                                <tr key={index}>
+                                    <td>{file.originalName}</td>
+                                    <td>
+                                        <div>On-chain hash: {file.onChainHash}</div>
+                                        <div>Hash from database: {file.computedHash}</div>
+                                    </td>
+                                    <td>{file.timestampDate}</td>
+                                    <td>{file.timestampTime}</td>
+                                    <td><a href={file.transactionHash} target="_blank" rel="noopener noreferrer">Link</a></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
                 <button className={styles.addButton} onClick={handleAddToFeature}>Add to feature</button>
             </div>
         </div>

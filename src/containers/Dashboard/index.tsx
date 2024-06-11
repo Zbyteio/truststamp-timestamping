@@ -5,6 +5,7 @@ import DashboardModal from '@/components/DashboardModal';
 import logoTruststamp from '@/assets/icons/logoTruststamp.png';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { Circles } from 'react-loader-spinner';
 
 export interface Feature {
     id: number;
@@ -40,6 +41,7 @@ export default function DashboardComponent() {
     const [password, setPassword] = useState('');
     const [awsCredentials, setAwsCredentials] = useState<AWSCredentials | null>(null);
     const [firebaseCredentials, setFirebaseCredentials] = useState<FirebaseCredentials | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
@@ -48,6 +50,7 @@ export default function DashboardComponent() {
             setEmail(email);
 
             const getPassword = async () => {
+                setIsLoading(true);
                 const response = await fetch(`/api/database/password?email=${email}`);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch decrypted password: ${response.statusText}`);
@@ -55,10 +58,11 @@ export default function DashboardComponent() {
                 const data = await response.json();
                 setPassword(data.password);
                 await loadCredentials(email, data.password);
-                fetchFeatures(email);
+                await fetchFeatures(email);
+                setIsLoading(false);
             };
 
-            getPassword();
+            getPassword().catch(() => setIsLoading(false));
         }
     }, [status, session]);
 
@@ -107,12 +111,20 @@ export default function DashboardComponent() {
     };
 
     const handleAddFeatureClick = () => {
-        router.push('/feature')
-    }
+        router.push('/feature');
+    };
 
     useEffect(() => {
         console.log("Selected feature:", selectedFeature);
     }, [selectedFeature]);
+
+    if (isLoading) {
+        return (
+            <div className={styles.loaderContainer}>
+                <Circles height="100" width="100" color="#4fa94d" ariaLabel="loading" />
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>

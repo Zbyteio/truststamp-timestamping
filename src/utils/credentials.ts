@@ -64,7 +64,7 @@ export const storePassword = async (email: string, plainPassword: string): Promi
 
     // Function to encrypt the password
     const encryptPassword = async (password: string) => {
-        const response = await fetch(`http://localhost:8000/encrypt/${password}`);
+        const response = await fetch(`https://hashify-next-backend.vercel.app/encrypt/${password}`);
         const data = await response.json();
         return data; // Assuming the API response contains the encrypted password in the 'encryptedData' field and 'iv'
     };
@@ -95,7 +95,7 @@ export const getPassword = async (email: string): Promise<string | null> => {
 
     // Function to decrypt the password
     const decryptPassword = async (encryptedPassword: string, iv: string) => {
-        const response = await fetch(`http://localhost:8000/decrypt/${iv}/${encryptedPassword}`);
+        const response = await fetch(`https://hashify-next-backend.vercel.app/decrypt/${iv}/${encryptedPassword}`);
         const data = await response.json();
         return data; // Assuming the API response contains the decrypted password in the 'decrypted' field
     };

@@ -9,6 +9,7 @@ import { useKeys } from '@/context/KeysContext';
 import { Feature, AWSCredentials, FirebaseCredentials } from '@/containers/Dashboard';
 import { Circles } from 'react-loader-spinner';
 import { useRouter } from 'next/navigation';
+import sha256 from 'js-sha256';
 
 interface Repository {
     id: number;
@@ -342,16 +343,18 @@ export default function TrackFeatureContainer() {
         try {
             // Step 1: Hash the file using SHA-256
             const arrayBuffer = await file.arrayBuffer();
-            const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashedData = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const hash = sha256.sha256.create();
+            hash.update(uint8Array);
+            const hexHash = hash.hex();
+            console.log(hexHash);
 
             if (!publicKey || !privateKey) {
                 throw new Error('Public or private key not found');
             }
 
             // Step 3: Send the hashed data to the blockchain via the API
-            const response = await fetch(`/api/wallet/writeToChain?publicKey=${encodeURIComponent(publicKey)}&privateKey=${encodeURIComponent(privateKey)}&hashedData=${encodeURIComponent(hashedData)}&fileName=${encodeURIComponent(fileName)}`, {
+            const response = await fetch(`/api/wallet/writeToChain?publicKey=${encodeURIComponent(publicKey)}&privateKey=${encodeURIComponent(privateKey)}&hashedData=${encodeURIComponent(hexHash)}&fileName=${encodeURIComponent(fileName)}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'

@@ -4,6 +4,7 @@ import { AWSCredentials, FirebaseCredentials } from '@/containers/Dashboard';
 import { useKeys } from '@/context/KeysContext';
 import { useRouter } from 'next/navigation';
 import { Circles } from 'react-loader-spinner';
+import sha256 from 'js-sha256';
 
 interface Feature {
     id: number;
@@ -69,9 +70,11 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
         const fileBase64 = await response.json();
         const fileBuffer = Buffer.from(fileBase64.file, 'base64');
 
-        const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        // Step 3: Calculate the SHA-256 hash using js-sha256
+        const hash = sha256.sha256.create();
+        hash.update(fileBuffer);
+        const hexHash = hash.hex();
+        return hexHash;
     };
 
     const handleAddToFeature = () => {

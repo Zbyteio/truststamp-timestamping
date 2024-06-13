@@ -92,11 +92,6 @@
     margin-bottom: 20px;
 }
 
-.repositoryList {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
 .repository {
     margin-bottom: 20px;
 }
@@ -153,14 +148,15 @@
     margin-bottom: 20px;
 }
 
-.columns {
-    display: flex;
-    gap: 20px;
-}
-
 .selectOrganizations, .selectRepositories, .selectBranches, .selectFiles {
     flex: 1;
     min-width: 200px;
+}
+
+.columns {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
 }
 
 .listContainer ul {

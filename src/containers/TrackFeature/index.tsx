@@ -81,7 +81,7 @@ export default function TrackFeatureContainer() {
             setEmail(email);
 
             const initialize = async () => {
-                try 
+                try
                 {
 
                 const response = await fetch(`/api/database/password?email=${email}`);
@@ -134,7 +134,7 @@ export default function TrackFeatureContainer() {
         try {
             const response = await fetch(`/api/github/repositories?email=${email}&password=${password}&org=${org}`);
             const data = await response.json();
-            setRepositories(data);
+            setRepositories(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching repositories:', error);
         } finally {
@@ -594,13 +594,11 @@ export default function TrackFeatureContainer() {
                                 <Circles color="#00BFFF" height={40} width={40} />
                             </div>
                         ) : (
-                            <ul>
+														<select onChange={e => handleOrgSelect(e.target.value)}>
                                 {organizations.map((org, index) => (
-                                    <li key={index} onClick={() => handleOrgSelect(org)} style={{ cursor: 'pointer', margin: '10px 0' }}>
-                                        {org}
-                                    </li>
+                                    <option key={org} value={org}>{org}</option>
                                 ))}
-                            </ul>
+														</select>
                         )}
                     </div>
                     {selectedOrg && (
@@ -611,13 +609,11 @@ export default function TrackFeatureContainer() {
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-                                <div className={styles.repositoryList}>
-                                    {repositories.map((repo) => (
-                                        <div key={repo.id} className={styles.repository} onClick={() => handleRepoSelect(repo.full_name)}>
-                                            <span>{repo.name}</span>
-                                        </div>
-                                    ))}
-                                </div>
+																<select onChange={e => handleRepoSelect(e.target.value)}>
+																		{repositories.map((repo, index) => (
+																				<option key={repo.id} value={repo.full_name}>{repo.name}</option>
+																		))}
+																</select>
                             )}
                         </div>
                     )}
@@ -629,13 +625,11 @@ export default function TrackFeatureContainer() {
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-                                <div className={styles.branchList}>
-                                    {branches.map((branch) => (
-                                        <div key={branch.name} className={styles.branch} onClick={() => handleBranchChange(branch.name)}>
-                                            <span>{branch.name}</span>
-                                        </div>
-                                    ))}
-                                </div>
+																<select onChange={e => handleBranchChange(e.target.value)}>
+																		{branches.map((branch, index) => (
+																				<option key={branch.name} value={branch.name}>{branch.name}</option>
+																		))}
+																</select>
                             )}
                         </div>
                     )}

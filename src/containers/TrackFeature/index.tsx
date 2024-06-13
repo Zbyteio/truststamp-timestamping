@@ -390,7 +390,7 @@ export default function TrackFeatureContainer() {
                     onChange={() => handleFileSelection(file.path, file.type)}
                 />
                 <span onClick={file.type === 'dir' ? () => handleFolderClick(file.path) : undefined}>
-                    {file.type === 'dir' ? '📁' : '📄'} {file.name}
+                    {file.type === 'dir' && <> &#128448;</>} {file.name}
                 </span>
                 {file.expanded && file.items && (
                     <div className={styles.nestedFiles}>

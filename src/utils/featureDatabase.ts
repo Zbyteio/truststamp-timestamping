@@ -37,4 +37,22 @@ fdb.exec(`
   )
 `);
 
+// migrations to `features`
+const pragma = fdb.pragma(`table_info(features);`);
+
+// add `org` column to `features`
+if (!pragma.find(colData => colData.name === 'org')) {
+	fdb.exec(`ALTER TABLE features ADD org TEXT`);
+}
+
+// add `repo` column to `features`
+if (!pragma.find(colData => colData.name === 'repo')) {
+	fdb.exec(`ALTER TABLE features ADD repo TEXT`);
+}
+
+// add `branch` column to `features`
+if (!pragma.find(colData => colData.name === 'branch')) {
+	fdb.exec(`ALTER TABLE features ADD branch TEXT`);
+}
+
 export default fdb;

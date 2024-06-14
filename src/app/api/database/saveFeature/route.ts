@@ -3,12 +3,12 @@ import { storeFeature, getFeaturesWithFilesAndPathsByEmail, getFeatureId, storeG
 
 export async function POST(req: NextRequest) {
     try {
-        const { email, title, description, fileNames, githubPaths } = await req.json();
+        const { email, title, description, org, repo, branch, fileNames, githubPaths } = await req.json();
 
-        console.log('Received data:', { email, title, description, fileNames, githubPaths });
+        console.log('Received data:', { email, title, description, org, repo, branch, fileNames, githubPaths });
 
-        const featureId = getFeatureId(email, title, description);
-        storeFeature(email, title, description, fileNames);
+        const featureId = getFeatureId(email, title, description, org, repo, branch);
+        storeFeature(email, title, description, org, repo, branch, fileNames);
 
         githubPaths.forEach((path: { path: string, type: string }) => {
             storeGitHubPath(featureId, path.path, path.type);

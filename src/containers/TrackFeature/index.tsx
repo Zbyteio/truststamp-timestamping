@@ -45,6 +45,7 @@ interface TrackFeatureProps {
 
 export default function TrackFeatureContainer() {
     const router = useRouter();
+		const [initialValues, setInitialValues] = useState<object>({});
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -71,11 +72,6 @@ export default function TrackFeatureContainer() {
     const [submitLoading, setSubmitLoading] = useState(false);
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const featureParam = params.get('feature');
-        const awsCredentialsParam = params.get('awsCredentials');
-        const firebaseCredentialsParam = params.get('firebaseCredentials');
-
         if (status === 'authenticated' && session?.user?.email) {
             const email = session.user.email;
             setEmail(email);
@@ -93,9 +89,6 @@ export default function TrackFeatureContainer() {
                 const data = await response.json();
                 setPassword(data.password);
                 await fetchOrganizations(email, data.password);
-                if (featureParam) {
-                    await setFeatureIfEditing(featureParam);
-                }
                 setLoading(false);
             }
             catch (err)
@@ -110,10 +103,43 @@ export default function TrackFeatureContainer() {
         }
     }, [status, session]);
 
+		useEffect(() => {
+			if (!email || !password) return;
+
+			const params = new URLSearchParams(window.location.search);
+			const featureParam = params.get('feature');
+			featureParam && setFeatureIfEditing(featureParam);
+		}, [email, password]);
+
     const setFeatureIfEditing = async (feature: string) => {
         const featureValues = JSON.parse(feature);
-        setTitle(featureValues.title);
-        setDescription(featureValues.description);
+
+				setTitle(featureValues.title);
+				setDescription(featureValues.description);
+				setSelectedRepository(featureValues.repo);
+				setSelectedBranch(featureValues.branch);
+
+				setInitialValues({
+					title: featureValues.title,
+					description: featureValues.description,
+					org: featureValues.org,
+					repo: featureValues.repo,
+					branch: featureValues.branch
+				});
+
+				const [files, folders] = [[], []];
+				featureValues?.githubPaths.forEach(item => {
+					item.type === 'file' && files.push(item.path);
+					item.type === 'folder' && folders.push(item.path);
+				});
+				setSelectedFiles(files);
+				setSelectedFolders(folders);
+
+				featureValues.org && featureValues.repo && featureValues.branch && Promise.all([
+					fetchRepositories(featureValues.org),
+					fetchBranches(featureValues.repo),
+					fetchFileStructure(featureValues.repo, featureValues.branch)
+				]);
     }
 
     const fetchOrganizations = async (email: string, password: string) => {
@@ -207,15 +233,6 @@ export default function TrackFeatureContainer() {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
-    };
-
-    const handleRepositoryChange = (repoName: string) => {
-        setSelectedRepositories((prev) => ({
-            ...prev,
-            [repoName]: !prev[repoName],
-        }));
-        setSelectedRepository(repoName);
-        fetchBranches(repoName);
     };
 
     const handleBranchChange = (branchName: string) => {
@@ -328,6 +345,9 @@ export default function TrackFeatureContainer() {
                     email,
                     title,
                     description,
+										org: selectedOrg,
+										repo: selectedRepository,
+										branch: selectedBranch,
                     fileNames: fileDataWithHashes,
                     githubPaths
                 })
@@ -551,8 +571,8 @@ export default function TrackFeatureContainer() {
                             id="title"
                             type="text"
                             placeholder="Enter feature title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
+                            defaultValue={initialValues.title}
+													  onChange={(e) => setTitle(e.target.value)}
                         />
                     </div>
                     <div className={styles.inputGroup}>
@@ -560,8 +580,8 @@ export default function TrackFeatureContainer() {
                         <textarea
                             id="description"
                             placeholder="Enter description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            defaultValue={initialValues.description}
+													  onChange={(e) => setDescription(e.target.value)}
                         />
                     </div>
                     <div className={styles.fileUpload}>
@@ -590,26 +610,26 @@ export default function TrackFeatureContainer() {
                     <div className={`${styles.selectOrganizations} ${styles.listContainer}`}>
                         <h2>Select Organization</h2>
                         {orgLoading ? (
-                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ display: 'flex' }}>
                                 <Circles color="#00BFFF" height={40} width={40} />
                             </div>
                         ) : (
-														<select onChange={e => handleOrgSelect(e.target.value)}>
+														<select defaultValue={initialValues.org} onChange={e => handleOrgSelect(e.target.value)}>
                                 {organizations.map((org, index) => (
                                     <option key={org} value={org}>{org}</option>
                                 ))}
 														</select>
                         )}
                     </div>
-                    {selectedOrg && (
+                    {(
                         <div className={`${styles.selectRepositories} ${styles.listContainer}`}>
                             <h3>Repositories for {selectedOrg}</h3>
                             {repoLoading ? (
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-																<select onChange={e => handleRepoSelect(e.target.value)}>
+																<select defaultValue={initialValues.repo} onChange={e => handleRepoSelect(e.target.value)}>
 																		{repositories.map((repo, index) => (
 																				<option key={repo.id} value={repo.full_name}>{repo.name}</option>
 																		))}
@@ -617,15 +637,15 @@ export default function TrackFeatureContainer() {
                             )}
                         </div>
                     )}
-                    {selectedRepository && (
+                    {(
                         <div className={`${styles.selectBranches} ${styles.listContainer}`}>
                             <h3>Branches for {selectedRepository}</h3>
                             {branchLoading ? (
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-																<select onChange={e => handleBranchChange(e.target.value)}>
+																<select defaultValue={initialValues.branch} onChange={e => handleBranchChange(e.target.value)}>
 																		{branches.map((branch, index) => (
 																				<option key={branch.name} value={branch.name}>{branch.name}</option>
 																		))}
@@ -633,11 +653,11 @@ export default function TrackFeatureContainer() {
                             )}
                         </div>
                     )}
-                    {selectedBranch && (
+                    {(
                         <div className={`${styles.selectFiles} ${styles.listContainer}`}>
                             <h3>Files for {selectedBranch}</h3>
                             {fileLoading ? (
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (

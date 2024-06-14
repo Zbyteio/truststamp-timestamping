@@ -78,7 +78,7 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
     };
 
     const handleAddToFeature = () => {
-        router.push(`/feature?feature=${encodeURIComponent(JSON.stringify(feature))}&awsCredentials=${encodeURIComponent(JSON.stringify(awsCredentials))}&firebaseCredentials=${encodeURIComponent(JSON.stringify(firebaseCredentials))}`);
+        router.push(`/feature?feature=${encodeURIComponent(JSON.stringify(feature))}`);
     };
 
     return (

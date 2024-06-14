@@ -71,7 +71,7 @@ export default function DashboardComponent() {
                 {
                     router.push('/setup');
                 }
-               
+
             };
 
             getPassword().catch(() => setIsLoading(false));
@@ -113,6 +113,9 @@ export default function DashboardComponent() {
             id: feature.feature.id,
             title: feature.feature.title,
             description: feature.feature.description,
+            org: feature.feature.org,
+            repo: feature.feature.repo,
+            branch: feature.feature.branch,
             files: feature.files,
             githubPaths: feature.githubPaths
         });

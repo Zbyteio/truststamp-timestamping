@@ -5,6 +5,9 @@ interface FeatureRow {
   email: string;
   title: string;
   description: string;
+  org: string;
+  repo: string;
+  branch: string;
 }
 
 interface FileRow {
@@ -22,21 +25,21 @@ interface GitHubPathRow {
   type: string;
 }
 
-export const getFeatureId = (email: string, title: string, description: string): number => {
+export const getFeatureId = (email: string, title: string, description: string, org: string, repo: string, branch: string): number => {
   const stmt = fdb.prepare('SELECT id FROM features WHERE email = ? AND title = ? AND description = ?');
   const row = stmt.get(email, title, description) as FeatureRow | undefined;
 
   if (row) {
     return row.id;
   } else {
-    const insertStmt = fdb.prepare('INSERT INTO features (email, title, description) VALUES (?, ?, ?)');
-    const info = insertStmt.run(email, title, description);
+    const insertStmt = fdb.prepare('INSERT INTO features (email, title, description, org, repo, branch) VALUES (?, ?, ?, ?, ?, ?)');
+    const info = insertStmt.run(email, title, description, org, repo, branch);
     return info.lastInsertRowid as number;
   }
 };
 
-export const storeFeature = (email: string, title: string, description: string, fileNames: { originalName: string, random: string, transactionHash: string }[]): void => {
-  const featureId = getFeatureId(email, title, description);
+export const storeFeature = (email: string, title: string, description: string, org: string, repo: string, branch: string, fileNames: { originalName: string, random: string, transactionHash: string }[]): void => {
+  const featureId = getFeatureId(email, title, description, org, repo, branch);
 
   const insertFile = fdb.prepare(`
     INSERT INTO files (feature_id, original_file_name, randomized_file_name, transaction_hash)

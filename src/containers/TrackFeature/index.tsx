@@ -117,6 +117,7 @@ export default function TrackFeatureContainer() {
 
 				setTitle(featureValues.title);
 				setDescription(featureValues.description);
+				setSelectedOrg(featureValues.org);
 				setSelectedRepository(featureValues.repo);
 				setSelectedBranch(featureValues.branch);
 
@@ -136,11 +137,17 @@ export default function TrackFeatureContainer() {
 				setSelectedFiles(files);
 				setSelectedFolders(folders);
 
-				featureValues.org && featureValues.repo && featureValues.branch && Promise.all([
+				featureValues.org && featureValues.repo && featureValues.branch && await Promise.all([
 					fetchRepositories(featureValues.org),
 					fetchBranches(featureValues.repo),
 					fetchFileStructure(featureValues.repo, featureValues.branch)
 				]);
+
+				let targetCrumb = 0;
+				featureValues.org && targetCrumb++;
+				featureValues.repo && targetCrumb++;
+				featureValues.branch && targetCrumb++;
+				setCrumb(targetCrumb);
     }
 
     const fetchOrganizations = async (email: string, password: string) => {
@@ -619,6 +626,12 @@ export default function TrackFeatureContainer() {
 											</div>
 										</div>
 
+										<div className={styles.crumbValues}>
+											{crumb > 0 && selectedOrg && <div>Org: {selectedOrg}</div>}
+											{crumb > 1 && selectedRepository && <div>Repo: {selectedRepository}</div>}
+											{crumb > 2 && selectedBranch && <div>Branch: {selectedBranch}</div>}
+										</div>
+
                     {crumb === 0 && (
                        <div className={`${styles.selectOrganizations} ${styles.listContainer}`}>
                            <h2>Select Organization</h2>
@@ -637,7 +650,7 @@ export default function TrackFeatureContainer() {
 										)}
                     {crumb === 1 && (
                         <div className={`${styles.selectRepositories} ${styles.listContainer}`}>
-                            <h3>Repositories for {selectedOrg}</h3>
+                            <h2>Repositories for {selectedOrg}</h2>
                             {repoLoading ? (
                                 <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />
@@ -653,7 +666,7 @@ export default function TrackFeatureContainer() {
                     )}
                     {crumb === 2 && (
                         <div className={`${styles.selectBranches} ${styles.listContainer}`}>
-                            <h3>Branches for {selectedRepository}</h3>
+                            <h2>Branches for {selectedRepository}</h2>
                             {branchLoading ? (
                                 <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />
@@ -669,7 +682,7 @@ export default function TrackFeatureContainer() {
                     )}
                     {crumb === 3 && (
                         <div className={`${styles.selectFiles} ${styles.listContainer}`}>
-                            <h3>Files for {selectedBranch}</h3>
+                            <h2>Files for {selectedBranch}</h2>
                             {fileLoading ? (
                                 <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />

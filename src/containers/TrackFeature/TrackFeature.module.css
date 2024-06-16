@@ -201,6 +201,12 @@
 	background: gray;
 }
 
+.crumbValues {
+	font-size: 0.8em;
+	color: gray;
+	margin-block-end: 10px;
+}
+
 .listContainer ul {
     list-style-type: none;
     padding: 0;

@@ -46,6 +46,7 @@ interface TrackFeatureProps {
 export default function TrackFeatureContainer() {
     const router = useRouter();
 		const [initialValues, setInitialValues] = useState<object>({});
+		const [crumb, setCrumb] = useState<number>(0); // 0 org, 1 repo, 2 branch, 3 files
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -173,7 +174,7 @@ export default function TrackFeatureContainer() {
         try {
             const response = await fetch(`/api/github/branches?repository=${repository}&email=${email}&password=${password}`);
             const data = await response.json();
-            setBranches(data);
+						setBranches(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching branches:', error);
         } finally {
@@ -235,20 +236,13 @@ export default function TrackFeatureContainer() {
         }
     };
 
-    const handleBranchChange = (branchName: string) => {
-        setSelectedBranch(branchName);
-        fetchFileStructure(selectedRepository, branchName);
-    };
-
-    const handleOrgSelect = async (org: string) => {
-        setSelectedOrg(org);
-        await fetchRepositories(org);
-    };
-
-    const handleRepoSelect = async (repository: string) => {
-        setSelectedRepository(repository);
-        await fetchBranches(repository);
-    };
+		const crumbNext = () => {
+			const next = crumb + 1;
+			setCrumb(next);
+			next === 1 && fetchRepositories(selectedOrg);
+			next === 2 && fetchBranches(selectedRepository);
+			next === 3 && fetchFileStructure(selectedRepository, selectedBranch);
+		};
 
     const handleFolderClick = (path: string) => {
         const folder = findFolder(fileStructure, path);
@@ -606,22 +600,42 @@ export default function TrackFeatureContainer() {
                         </div>
                     </div>
                 </div>
-                <div className={styles.columns}>
-                    <div className={`${styles.selectOrganizations} ${styles.listContainer}`}>
-                        <h2>Select Organization</h2>
-                        {orgLoading ? (
-                            <div style={{ display: 'flex' }}>
-                                <Circles color="#00BFFF" height={40} width={40} />
-                            </div>
-                        ) : (
-														<select defaultValue={initialValues.org} onChange={e => handleOrgSelect(e.target.value)}>
-                                {organizations.map((org, index) => (
-                                    <option key={org} value={org}>{org}</option>
-                                ))}
-														</select>
-                        )}
-                    </div>
-                    {(
+                <div>
+										<div className={styles.crumbs}>
+											{['Org', 'Repo', 'Branch', 'Files'].map((string, i) => (
+												<React.Fragment key={string}>
+													<span className={styles.divider}>&gt;</span>
+													<button
+														data-diff={Math.max(0, i - crumb + 1)}
+														disabled={i - crumb >= 0}
+														onClick={() => setCrumb(i)}
+													>{string}</button>
+												</React.Fragment>
+											))}
+
+											<div className={styles.crumbNavigation}>
+												<button onClick={() => setCrumb(crumb - 1)} disabled={crumb === 0}>Back</button>
+												<button onClick={crumbNext} disabled={orgLoading || repoLoading || branchLoading || fileLoading || crumb === 3}>Next</button>
+											</div>
+										</div>
+
+                    {crumb === 0 && (
+                       <div className={`${styles.selectOrganizations} ${styles.listContainer}`}>
+                           <h2>Select Organization</h2>
+                           {orgLoading ? (
+                               <div style={{ display: 'flex' }}>
+                                   <Circles color="#00BFFF" height={40} width={40} />
+                               </div>
+                           ) : (
+									 						<select defaultValue={initialValues.org} onChange={e => setSelectedOrg(e.target.value)}>
+                   		            {organizations.map((org, index) => (
+                   		                <option key={org} value={org}>{org}</option>
+                   		            ))}
+									 						</select>
+                           )}
+                       </div>
+										)}
+                    {crumb === 1 && (
                         <div className={`${styles.selectRepositories} ${styles.listContainer}`}>
                             <h3>Repositories for {selectedOrg}</h3>
                             {repoLoading ? (
@@ -629,7 +643,7 @@ export default function TrackFeatureContainer() {
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-																<select defaultValue={initialValues.repo} onChange={e => handleRepoSelect(e.target.value)}>
+																<select defaultValue={initialValues.repo} onChange={e => setSelectedRepository(e.target.value)}>
 																		{repositories.map((repo, index) => (
 																				<option key={repo.id} value={repo.full_name}>{repo.name}</option>
 																		))}
@@ -637,7 +651,7 @@ export default function TrackFeatureContainer() {
                             )}
                         </div>
                     )}
-                    {(
+                    {crumb === 2 && (
                         <div className={`${styles.selectBranches} ${styles.listContainer}`}>
                             <h3>Branches for {selectedRepository}</h3>
                             {branchLoading ? (
@@ -645,7 +659,7 @@ export default function TrackFeatureContainer() {
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-																<select defaultValue={initialValues.branch} onChange={e => handleBranchChange(e.target.value)}>
+																<select defaultValue={initialValues.branch} onChange={e => setSelectedBranch(e.target.value)}>
 																		{branches.map((branch, index) => (
 																				<option key={branch.name} value={branch.name}>{branch.name}</option>
 																		))}
@@ -653,7 +667,7 @@ export default function TrackFeatureContainer() {
                             )}
                         </div>
                     )}
-                    {(
+                    {crumb === 3 && (
                         <div className={`${styles.selectFiles} ${styles.listContainer}`}>
                             <h3>Files for {selectedBranch}</h3>
                             {fileLoading ? (

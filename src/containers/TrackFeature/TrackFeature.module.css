@@ -153,10 +153,52 @@
     min-width: 200px;
 }
 
-.columns {
+.crumbs {
 	display: flex;
-	flex-direction: column;
-	gap: 20px;
+	align-items: center;
+	gap: 8px;
+}
+
+.crumbs .divider { color: gray; }
+.crumbs .divider:first-child { display: none; }
+
+.crumbs button {
+	background: none;
+	padding: 0px;
+	font-size: 0.9em;
+	border: none;
+	color: gray;
+}
+.crumbs button[data-diff="0"] {
+	color: #6a1b9a;
+	cursor: pointer;
+}
+.crumbs button[data-diff="0"], .crumbs button[data-diff="1"] {
+	font-weight: bold;
+}
+.crumbs button[data-diff="1"] {
+	color: black;
+}
+
+.crumbNavigation {
+	display: flex;
+	gap: 8px;
+	margin-block: 10px;
+}
+
+.crumbNavigation button {
+	background: #6a1b9a;
+	border: none;
+	color: white;
+	border-radius: 5px;
+	font-size: 0.8em;
+	cursor: pointer;
+	padding: 4px 8px;
+}
+
+.crumbNavigation button[disabled] {
+	cursor: default;
+	background: gray;
 }
 
 .listContainer ul {

@@ -45,7 +45,7 @@ interface TrackFeatureProps {
 
 export default function TrackFeatureContainer() {
     const router = useRouter();
-		const [initialValues, setInitialValues] = useState<object>({});
+		const [initialValues, setInitialValues] = useState<any>(null);
 		const [crumb, setCrumb] = useState<number>(0); // 0 org, 1 repo, 2 branch, 3 files
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
@@ -129,8 +129,9 @@ export default function TrackFeatureContainer() {
 					branch: featureValues.branch
 				});
 
-				const [files, folders] = [[], []];
-				featureValues?.githubPaths.forEach(item => {
+				const files: string[] = [];
+				const folders: string[] = [];
+				featureValues?.githubPaths.forEach((item: { type: string, path: string }) => {
 					item.type === 'file' && files.push(item.path);
 					item.type === 'folder' && folders.push(item.path);
 				});
@@ -572,7 +573,7 @@ export default function TrackFeatureContainer() {
                             id="title"
                             type="text"
                             placeholder="Enter feature title"
-                            defaultValue={initialValues.title}
+                            defaultValue={initialValues?.title}
 													  onChange={(e) => setTitle(e.target.value)}
                         />
                     </div>
@@ -581,7 +582,7 @@ export default function TrackFeatureContainer() {
                         <textarea
                             id="description"
                             placeholder="Enter description"
-                            defaultValue={initialValues.description}
+                            defaultValue={initialValues?.description}
 													  onChange={(e) => setDescription(e.target.value)}
                         />
                     </div>
@@ -640,7 +641,7 @@ export default function TrackFeatureContainer() {
                                    <Circles color="#00BFFF" height={40} width={40} />
                                </div>
                            ) : (
-									 						<select defaultValue={initialValues.org} onChange={e => setSelectedOrg(e.target.value)}>
+									 						<select defaultValue={initialValues?.org} onChange={e => setSelectedOrg(e.target.value)}>
                    		            {organizations.map((org, index) => (
                    		                <option key={org} value={org}>{org}</option>
                    		            ))}
@@ -656,7 +657,7 @@ export default function TrackFeatureContainer() {
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-																<select defaultValue={initialValues.repo} onChange={e => setSelectedRepository(e.target.value)}>
+																<select defaultValue={initialValues?.repo} onChange={e => setSelectedRepository(e.target.value)}>
 																		{repositories.map((repo, index) => (
 																				<option key={repo.id} value={repo.full_name}>{repo.name}</option>
 																		))}
@@ -672,7 +673,7 @@ export default function TrackFeatureContainer() {
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-																<select defaultValue={initialValues.branch} onChange={e => setSelectedBranch(e.target.value)}>
+																<select defaultValue={initialValues?.branch} onChange={e => setSelectedBranch(e.target.value)}>
 																		{branches.map((branch, index) => (
 																				<option key={branch.name} value={branch.name}>{branch.name}</option>
 																		))}

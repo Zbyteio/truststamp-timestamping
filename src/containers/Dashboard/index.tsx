@@ -11,6 +11,9 @@ export interface Feature {
     id: number;
     title: string;
     description: string;
+		org: string;
+		repo: string;
+		branch: string;
     files: { originalName: string, random: string, transactionHash: string }[];
     githubPaths: { path: string, type: string }[];
 }

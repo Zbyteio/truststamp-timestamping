@@ -47,6 +47,13 @@ export const storeCredential = (email: string, service: string, key: string, val
     stmt.run(userId, service, key, encryptedValue, encryptedChecker);
 };
 
+export function getAllEmails(): string[] {
+    const stmt = db.prepare('SELECT email FROM users');
+    const rows = stmt.all() as { email: string }[]; // Explicitly type the result
+    return rows.map(row => row.email);
+}
+
+
 export const getCredential = (email: string, service: string, key: string, password: string): string | null => {
     const userId = getUserId(email);
     const stmt = db.prepare('SELECT value FROM credentials WHERE user_id = ? AND service = ? AND key = ?');

@@ -159,7 +159,8 @@ export default function TrackFeatureContainer() {
         try {
             const response = await fetch(`/api/github/organizations?email=${email}&password=${password}`);
             const data = await response.json();
-            setOrganizations(data);
+						setOrganizations(Array.isArray(data) ? data : []);
+						setSelectedOrg(data[0] ?? '');
         } catch (error) {
             console.error('Error fetching organizations:', error);
         } finally {
@@ -173,6 +174,7 @@ export default function TrackFeatureContainer() {
             const response = await fetch(`/api/github/repositories?email=${email}&password=${password}&org=${org}`);
             const data = await response.json();
             setRepositories(Array.isArray(data) ? data : []);
+						setSelectedRepository(data[0]?.full_name ?? '');
         } catch (error) {
             console.error('Error fetching repositories:', error);
         } finally {
@@ -186,6 +188,7 @@ export default function TrackFeatureContainer() {
             const response = await fetch(`/api/github/branches?repository=${repository}&email=${email}&password=${password}`);
             const data = await response.json();
 						setBranches(Array.isArray(data) ? data : []);
+						setSelectedBranch(data[0]?.name ?? '');
         } catch (error) {
             console.error('Error fetching branches:', error);
         } finally {
@@ -654,47 +657,65 @@ export default function TrackFeatureContainer() {
 										)}
                     {crumb === 1 && (
                         <div className={`${styles.selectRepositories} ${styles.listContainer}`}>
-                            <h2>Repositories for {selectedOrg}</h2>
                             {repoLoading ? (
                                 <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-																<select defaultValue={initialValues?.repo} onChange={e => setSelectedRepository(e.target.value)}>
+															repositories.length ? (
+																<>
+																	<h2>Repositories for {selectedOrg}</h2>
+																	<select defaultValue={initialValues?.repo} onChange={e => setSelectedRepository(e.target.value)}>
 																		{repositories.map((repo, index) => (
-																				<option key={repo.id} value={repo.full_name}>{repo.name}</option>
+																			<option key={repo.id} value={repo.full_name}>{repo.name}</option>
 																		))}
-																</select>
+																	</select>
+																</>
+															) : (
+																<h2>No repositories found for organization "{selectedOrg}".</h2>
+															)
                             )}
                         </div>
                     )}
                     {crumb === 2 && (
                         <div className={`${styles.selectBranches} ${styles.listContainer}`}>
-                            <h2>Branches for {selectedRepository}</h2>
                             {branchLoading ? (
                                 <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-																<select defaultValue={initialValues?.branch} onChange={e => setSelectedBranch(e.target.value)}>
+															branches.length ? (
+																<>
+																	<h2>Branches for {selectedRepository}</h2>
+																	<select defaultValue={initialValues?.branch} onChange={e => setSelectedBranch(e.target.value)}>
 																		{branches.map((branch, index) => (
-																				<option key={branch.name} value={branch.name}>{branch.name}</option>
+																			<option key={branch.name} value={branch.name}>{branch.name}</option>
 																		))}
-																</select>
+																	</select>
+																</>
+															) : (
+																<h2>No branches found for repository "{selectedRepository}".</h2>
+															)
                             )}
                         </div>
                     )}
                     {crumb === 3 && (
                         <div className={`${styles.selectFiles} ${styles.listContainer}`}>
-                            <h2>Files for {selectedBranch}</h2>
                             {fileLoading ? (
                                 <div style={{ display: 'flex' }}>
                                     <Circles color="#00BFFF" height={40} width={40} />
                                 </div>
                             ) : (
-                                <div className={styles.fileList}>
-                                    {renderFileStructure(fileStructure)}
-                                </div>
+															fileStructure.length ? (
+																<>
+																	<h2>Files for {selectedBranch}</h2>
+																	<div className={styles.fileList}>
+																		{renderFileStructure(fileStructure)}
+																	</div>
+																</>
+															) : (
+																<h2>No files found for branch "{selectedBranch}".</h2>
+															)
                             )}
                         </div>
                     )}

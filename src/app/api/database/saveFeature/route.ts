@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { storeFeature, getFeaturesWithFilesAndPathsByEmail, getFeatureId, storeGitHubPath } from '@/utils/features';
+import { storeFeature, getFeaturesWithFilesAndPathsByEmail, getFeatureId, storeGitHubPath, deleteGitHubPathsForFeature } from '@/utils/features';
 
 export async function POST(req: NextRequest) {
     try {
@@ -9,6 +9,8 @@ export async function POST(req: NextRequest) {
 
         const featureId = getFeatureId(email, title, description, org, repo, branch);
         storeFeature(email, title, description, org, repo, branch, fileNames);
+
+				deleteGitHubPathsForFeature(featureId);
 
         githubPaths.forEach((path: { path: string, type: string }) => {
             storeGitHubPath(featureId, path.path, path.type);

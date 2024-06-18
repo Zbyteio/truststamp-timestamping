@@ -108,46 +108,49 @@ export default function TrackFeatureContainer() {
 			if (!email || !password) return;
 
 			const params = new URLSearchParams(window.location.search);
-			const featureParam = params.get('feature');
-			featureParam && setFeatureIfEditing(featureParam);
+			params.has('id') && setFeatureIfEditing(parseInt(params.get('id') as string));
 		}, [email, password]);
 
-    const setFeatureIfEditing = async (feature: string) => {
-        const featureValues = JSON.parse(feature);
+    const setFeatureIfEditing = async (featureId: number) => {
+				const res = await fetch(`/api/database/features?id=${featureId}`);
+				if (!res.ok) return console.warn(`Could not fetch feature with id ${featureId}.`);
 
-				setTitle(featureValues.title);
-				setDescription(featureValues.description);
-				setSelectedOrg(featureValues.org);
-				setSelectedRepository(featureValues.repo);
-				setSelectedBranch(featureValues.branch);
+				const feature = await res.json();
+				if (!feature) return console.warn(`No feature exists with id ${featureId}.`);
+
+				setTitle(feature.title);
+				setDescription(feature.description);
+				setSelectedOrg(feature.org);
+				setSelectedRepository(feature.repo);
+				setSelectedBranch(feature.branch);
 
 				setInitialValues({
-					title: featureValues.title,
-					description: featureValues.description,
-					org: featureValues.org,
-					repo: featureValues.repo,
-					branch: featureValues.branch
+					title: feature.title,
+					description: feature.description,
+					org: feature.org,
+					repo: feature.repo,
+					branch: feature.branch
 				});
 
 				const files: string[] = [];
 				const folders: string[] = [];
-				featureValues?.githubPaths.forEach((item: { type: string, path: string }) => {
+				feature?.githubPaths.forEach((item: { type: string, path: string }) => {
 					item.type === 'file' && files.push(item.path);
 					item.type === 'folder' && folders.push(item.path);
 				});
 				setSelectedFiles(files);
 				setSelectedFolders(folders);
 
-				featureValues.org && featureValues.repo && featureValues.branch && await Promise.all([
-					fetchRepositories(featureValues.org),
-					fetchBranches(featureValues.repo),
-					fetchFileStructure(featureValues.repo, featureValues.branch)
+				feature.org && feature.repo && feature.branch && await Promise.all([
+					fetchRepositories(feature.org),
+					fetchBranches(feature.repo),
+					fetchFileStructure(feature.repo, feature.branch)
 				]);
 
 				let targetCrumb = 0;
-				featureValues.org && targetCrumb++;
-				featureValues.repo && targetCrumb++;
-				featureValues.branch && targetCrumb++;
+				feature.org && targetCrumb++;
+				feature.repo && targetCrumb++;
+				feature.branch && targetCrumb++;
 				setCrumb(targetCrumb);
     }
 

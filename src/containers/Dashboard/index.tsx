@@ -10,9 +10,9 @@ export interface Feature {
     id: number;
     title: string;
     description: string;
-		org: string;
-		repo: string;
-		branch: string;
+    org: string;
+    repo: string;
+    branch: string;
     files: { originalName: string, random: string, transactionHash: string }[];
     githubPaths: { path: string, type: string }[];
 }
@@ -54,23 +54,26 @@ export default function DashboardComponent() {
             const getPassword = async () => {
                 try {
                     setIsLoading(true);
-                    const response = await fetch(`/api/database/password?email=${email}`);
-                    const data = await response.json();
-                    if (data.message==="Password not found")
-                        {
-                            console.log("in");
-                            router.push('/setup');
+                    const response = await fetch(`/api/database/password?email=${email}`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
                         }
-                    else
-                    {
+                    });
+
+                    const data = await response.json();
+                    if (data.message === "Password not found") {
+                        console.log("in");
+                        router.push('/setup');
+                    }
+                    else {
                         setIsLoading(false);
                     }
                     setPassword(data.password);
                     await loadCredentials(email, data.password);
                     await fetchFeatures(email);
                 }
-                catch (err)
-                {
+                catch (err) {
                     router.push('/setup');
                 }
 

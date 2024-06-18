@@ -7,7 +7,7 @@
     "build": "next build",
     "build-all-errors": "__NEXT_TEST_MODE=1 next build",
     "build-dangerously": "IGNORE_BUILD_ERRORS=true npm run build",
-    "start": "next start",
+    "start": "next start node server.js",
     "lint": "next lint"
   },
   "dependencies": {

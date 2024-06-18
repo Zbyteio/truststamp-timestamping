@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, ChangeEvent, DragEvent } from 'react';
 import Image from 'next/image';
 import styles from './TrackFeature.module.css'; // Assuming you have a CSS module for styling
-import logoTruststamp from '@/assets/icons/logoTruststamp.png';
 import { useSession } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID for random file names
 import JSZip from 'jszip'; // Import JSZip for zipping files
@@ -10,6 +9,7 @@ import { Feature, AWSCredentials, FirebaseCredentials } from '@/containers/Dashb
 import { Circles } from 'react-loader-spinner';
 import { useRouter } from 'next/navigation';
 import sha256 from 'js-sha256';
+import Nav from '@/components/Nav';
 
 interface Repository {
     id: number;
@@ -566,170 +566,170 @@ export default function TrackFeatureContainer() {
     }
 
     return (
-        <div className={styles.container}>
-            <div className={styles.logo}>
-                <Image src={logoTruststamp} alt="TrustStamp Logo" width={60} height={60} />
-            </div>
-            <div className={styles.formContainer}>
-                <div className={styles.trackFeature}>
-                    <h1>Track a feature</h1>
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="title">Title</label>
-                        <input
-                            id="title"
-                            type="text"
-                            placeholder="Enter feature title"
-                            defaultValue={initialValues?.title}
-													  onChange={(e) => setTitle(e.target.value)}
-                        />
-                    </div>
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="description">Description</label>
-                        <textarea
-                            id="description"
-                            placeholder="Enter description"
-                            defaultValue={initialValues?.description}
-													  onChange={(e) => setDescription(e.target.value)}
-                        />
-                    </div>
-                    <div className={styles.fileUpload}>
-                        <input
-                            type="file"
-                            multiple
-                            onChange={handleFileUpload}
-                            className={styles.fileInput}
-                            ref={fileInputRef}
-                            style={{ display: 'none' }}
-                        />
-                        <div
-                            className={styles.fileDropArea}
-                            onDragOver={handleDragOver}
-                            onDrop={handleDrop}
-                        >
-                            <p>Drag & Drop your files here</p>
-                            <button className={styles.chooseFilesBtn} onClick={handleChooseFilesClick}>Choose Files</button>
-                        </div>
-                        <div className={styles.filePreviewContainer}>
-                            {uploadedFiles.map((file) => renderFilePreview(file))}
-                        </div>
-                    </div>
-                </div>
-                <div>
-										<div className={styles.crumbs}>
-											{['Org', 'Repo', 'Branch', 'Files'].map((string, i) => (
-												<React.Fragment key={string}>
-													<span className={styles.divider}>&gt;</span>
-													<button
-														data-diff={Math.max(0, i - crumb + 1)}
-														disabled={i - crumb >= 0}
-														onClick={() => setCrumb(i)}
-													>{string}</button>
-												</React.Fragment>
+			<div className={styles.featurePage}>
+				<Nav/>
+				<div className={styles.container}>
+					<div className={styles.formContainer}>
+						<div className={styles.trackFeature}>
+							<h1>Track a feature</h1>
+							<div className={styles.inputGroup}>
+								<label htmlFor="title">Title</label>
+								<input
+									id="title"
+									type="text"
+									placeholder="Enter feature title"
+									defaultValue={initialValues?.title}
+									onChange={(e) => setTitle(e.target.value)}
+								/>
+							</div>
+							<div className={styles.inputGroup}>
+								<label htmlFor="description">Description</label>
+								<textarea
+									id="description"
+									placeholder="Enter description"
+									defaultValue={initialValues?.description}
+									onChange={(e) => setDescription(e.target.value)}
+								/>
+							</div>
+							<div className={styles.fileUpload}>
+								<input
+									type="file"
+									multiple
+									onChange={handleFileUpload}
+									className={styles.fileInput}
+									ref={fileInputRef}
+									style={{ display: 'none' }}
+								/>
+								<div
+									className={styles.fileDropArea}
+									onDragOver={handleDragOver}
+									onDrop={handleDrop}
+								>
+									<p>Drag & Drop your files here</p>
+									<button className={styles.chooseFilesBtn} onClick={handleChooseFilesClick}>Choose Files</button>
+								</div>
+								<div className={styles.filePreviewContainer}>
+									{uploadedFiles.map((file) => renderFilePreview(file))}
+								</div>
+							</div>
+						</div>
+						<div>
+							<div className={styles.crumbs}>
+								{['Org', 'Repo', 'Branch', 'Files'].map((string, i) => (
+									<React.Fragment key={string}>
+										<span className={styles.divider}>&gt;</span>
+										<button
+											data-diff={Math.max(0, i - crumb + 1)}
+											disabled={i - crumb >= 0}
+											onClick={() => setCrumb(i)}
+										>{string}</button>
+									</React.Fragment>
+								))}
+
+								<div className={styles.crumbNavigation}>
+									<button onClick={() => setCrumb(crumb - 1)} disabled={crumb === 0}>Back</button>
+									<button onClick={crumbNext} disabled={orgLoading || repoLoading || branchLoading || fileLoading || crumb === 3}>Next</button>
+								</div>
+							</div>
+
+							<div className={styles.crumbValues}>
+								{crumb > 0 && selectedOrg && <div>Org: {selectedOrg}</div>}
+								{crumb > 1 && selectedRepository && <div>Repo: {selectedRepository}</div>}
+								{crumb > 2 && selectedBranch && <div>Branch: {selectedBranch}</div>}
+							</div>
+
+							{crumb === 0 && (
+								<div className={`${styles.selectOrganizations} ${styles.listContainer}`}>
+									<h2>Select Organization</h2>
+									{orgLoading ? (
+										<div style={{ display: 'flex' }}>
+											<Circles color="#00BFFF" height={40} width={40} />
+										</div>
+									) : (
+										<select defaultValue={initialValues?.org} onChange={e => setSelectedOrg(e.target.value)}>
+											{organizations.map((org, index) => (
+												<option key={org} value={org}>{org}</option>
 											))}
-
-											<div className={styles.crumbNavigation}>
-												<button onClick={() => setCrumb(crumb - 1)} disabled={crumb === 0}>Back</button>
-												<button onClick={crumbNext} disabled={orgLoading || repoLoading || branchLoading || fileLoading || crumb === 3}>Next</button>
+										</select>
+									)}
+								</div>
+							)}
+							{crumb === 1 && (
+								<div className={`${styles.selectRepositories} ${styles.listContainer}`}>
+									{repoLoading ? (
+										<div style={{ display: 'flex' }}>
+											<Circles color="#00BFFF" height={40} width={40} />
+										</div>
+									) : (
+									repositories.length ? (
+										<>
+											<h2>Repositories for {selectedOrg}</h2>
+											<select defaultValue={initialValues?.repo} onChange={e => setSelectedRepository(e.target.value)}>
+												{repositories.map((repo, index) => (
+													<option key={repo.id} value={repo.full_name}>{repo.name}</option>
+												))}
+											</select>
+										</>
+									) : (
+										<h2>No repositories found for organization "{selectedOrg}".</h2>
+									)
+									)}
+								</div>
+							)}
+							{crumb === 2 && (
+								<div className={`${styles.selectBranches} ${styles.listContainer}`}>
+									{branchLoading ? (
+										<div style={{ display: 'flex' }}>
+											<Circles color="#00BFFF" height={40} width={40} />
+										</div>
+									) : (
+									branches.length ? (
+										<>
+											<h2>Branches for {selectedRepository}</h2>
+											<select defaultValue={initialValues?.branch} onChange={e => setSelectedBranch(e.target.value)}>
+												{branches.map((branch, index) => (
+													<option key={branch.name} value={branch.name}>{branch.name}</option>
+												))}
+											</select>
+										</>
+									) : (
+										<h2>No branches found for repository "{selectedRepository}".</h2>
+									)
+									)}
+								</div>
+							)}
+							{crumb === 3 && (
+								<div className={`${styles.selectFiles} ${styles.listContainer}`}>
+									{fileLoading ? (
+										<div style={{ display: 'flex' }}>
+											<Circles color="#00BFFF" height={40} width={40} />
+										</div>
+									) : (
+									fileStructure.length ? (
+										<>
+											<h2>Files for {selectedBranch}</h2>
+											<div className={styles.fileList}>
+												{renderFileStructure(fileStructure)}
 											</div>
-										</div>
-
-										<div className={styles.crumbValues}>
-											{crumb > 0 && selectedOrg && <div>Org: {selectedOrg}</div>}
-											{crumb > 1 && selectedRepository && <div>Repo: {selectedRepository}</div>}
-											{crumb > 2 && selectedBranch && <div>Branch: {selectedBranch}</div>}
-										</div>
-
-                    {crumb === 0 && (
-                       <div className={`${styles.selectOrganizations} ${styles.listContainer}`}>
-                           <h2>Select Organization</h2>
-                           {orgLoading ? (
-                               <div style={{ display: 'flex' }}>
-                                   <Circles color="#00BFFF" height={40} width={40} />
-                               </div>
-                           ) : (
-									 						<select defaultValue={initialValues?.org} onChange={e => setSelectedOrg(e.target.value)}>
-                   		            {organizations.map((org, index) => (
-                   		                <option key={org} value={org}>{org}</option>
-                   		            ))}
-									 						</select>
-                           )}
-                       </div>
-										)}
-                    {crumb === 1 && (
-                        <div className={`${styles.selectRepositories} ${styles.listContainer}`}>
-                            {repoLoading ? (
-                                <div style={{ display: 'flex' }}>
-                                    <Circles color="#00BFFF" height={40} width={40} />
-                                </div>
-                            ) : (
-															repositories.length ? (
-																<>
-																	<h2>Repositories for {selectedOrg}</h2>
-																	<select defaultValue={initialValues?.repo} onChange={e => setSelectedRepository(e.target.value)}>
-																		{repositories.map((repo, index) => (
-																			<option key={repo.id} value={repo.full_name}>{repo.name}</option>
-																		))}
-																	</select>
-																</>
-															) : (
-																<h2>No repositories found for organization "{selectedOrg}".</h2>
-															)
-                            )}
-                        </div>
-                    )}
-                    {crumb === 2 && (
-                        <div className={`${styles.selectBranches} ${styles.listContainer}`}>
-                            {branchLoading ? (
-                                <div style={{ display: 'flex' }}>
-                                    <Circles color="#00BFFF" height={40} width={40} />
-                                </div>
-                            ) : (
-															branches.length ? (
-																<>
-																	<h2>Branches for {selectedRepository}</h2>
-																	<select defaultValue={initialValues?.branch} onChange={e => setSelectedBranch(e.target.value)}>
-																		{branches.map((branch, index) => (
-																			<option key={branch.name} value={branch.name}>{branch.name}</option>
-																		))}
-																	</select>
-																</>
-															) : (
-																<h2>No branches found for repository "{selectedRepository}".</h2>
-															)
-                            )}
-                        </div>
-                    )}
-                    {crumb === 3 && (
-                        <div className={`${styles.selectFiles} ${styles.listContainer}`}>
-                            {fileLoading ? (
-                                <div style={{ display: 'flex' }}>
-                                    <Circles color="#00BFFF" height={40} width={40} />
-                                </div>
-                            ) : (
-															fileStructure.length ? (
-																<>
-																	<h2>Files for {selectedBranch}</h2>
-																	<div className={styles.fileList}>
-																		{renderFileStructure(fileStructure)}
-																	</div>
-																</>
-															) : (
-																<h2>No files found for branch "{selectedBranch}".</h2>
-															)
-                            )}
-                        </div>
-                    )}
-                </div>
-                <button className={styles.chooseFilesBtn} onClick={handleSubmit} disabled={submitLoading}>
-                    {submitLoading ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Circles color="#FFF" height={20} width={20} />
-                        </div>
-                    ) : (
-                        'Submit'
-                    )}
-                </button>
-            </div>
-        </div>
+										</>
+									) : (
+										<h2>No files found for branch "{selectedBranch}".</h2>
+									)
+									)}
+								</div>
+							)}
+						</div>
+						<button className={styles.chooseFilesBtn} onClick={handleSubmit} disabled={submitLoading}>
+							{submitLoading ? (
+								<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+									<Circles color="#FFF" height={20} width={20} />
+								</div>
+							) : (
+							'Submit'
+							)}
+						</button>
+					</div>
+				</div>
+			</div>
     );
 }

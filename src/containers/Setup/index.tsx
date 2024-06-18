@@ -3,7 +3,6 @@ import 'react-tooltip/dist/react-tooltip.css';
 import { FaQuestionCircle } from 'react-icons/fa';
 import { Tooltip } from 'react-tooltip';
 import Image from 'next/image';
-import logoTruststamp from '@/assets/icons/logoTruststamp.png';
 import firebaseIcon from '@/assets/icons/firebaseIcon.png'; // Adjust the paths if necessary
 import s3Icon from '@/assets/icons/s3Icon.png'; // Adjust the paths if necessary
 import PasswordPopup from '@/components/PasswordPopup';
@@ -11,6 +10,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { Circles } from 'react-loader-spinner';
 import Router from 'next/navigation';
 import { useRouter } from 'next/navigation';
+import Nav from '@/components/Nav';
 
 type Bucket = {
     Name: string;
@@ -435,163 +435,163 @@ export default function SetupContainer() {
     }
 
     return (
-        <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif', backgroundColor: '#f7f1fc', minHeight: '100vh' }}>
-            {showPasswordPopup && <PasswordPopup onClose={() => setShowPasswordPopup(false)} onSubmit={handlePasswordSubmit} />}
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px' }}>
-                    <Image src={logoTruststamp} alt="TrustStamp Logo" height={60} />
-                </div>
-                <div style={{ marginBottom: '30px' }}>
-                    <h2 style={{ fontSize: '24px', color: '#333' }}>Github Connection</h2>
-                    {githubId && (
-                        <div style={{ marginBottom: '10px', color: 'green' }}>
-                            GitHub User ID: {githubId}
-                        </div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                        <input
-                            type="password"
-                            placeholder="Organization Personal Access Token"
-                            value={githubToken}
-                            onChange={(e) => setGithubToken(e.target.value)}
-                            style={{ flex: 1, padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
-                        />
-                        <FaQuestionCircle
-                            data-tooltip-id="githubTokenTip"
-                            data-tooltip-content="To set up a personal access token, go to GitHub Settings > Developer settings > Personal access tokens."
-                            style={{ marginLeft: '10px', color: '#888', cursor: 'pointer' }}
-                        />
-                        <Tooltip id="githubTokenTip" place="top" />
-                    </div>
-                    <button onClick={handleGithubTestConnection} style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', position: 'relative' }}>
-                        {githubLoading ? (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Circles color="#FFF" height={20} width={20} />
-                            </div>
-                        ) : (
-                            'Test'
-                        )}
-                    </button>
-                    {githubConnectionStatus && <p style={githubConnectionStatusStyle}>{githubConnectionStatus}</p>}
-                </div>
-                <div style={{ marginBottom: '30px' }}>
-                    <h2 style={{ fontSize: '24px', color: '#333' }}>Select Database Service</h2>
-                    <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '20px' }}>
-                        <Image
-                            src={firebaseIcon}
-                            alt="Firebase Icon"
-                            height={60}
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => setSelectedService('firebase')}
-                        />
-                        <Image
-                            src={s3Icon}
-                            alt="S3 Icon"
-                            height={60}
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => setSelectedService('aws')}
-                        />
-                    </div>
-                    {renderServiceForm()}
-                    {selectedService && (
-                        <button onClick={handleTestConnection} style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', position: 'relative' }}>
-                            {connectionLoading ? (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Circles color="#FFF" height={20} width={20} />
-                                </div>
-                            ) : (
-                                'Test'
-                            )}
-                        </button>
-                    )}
-                    {connectionStatus && <p style={connectionStatusStyle}>{connectionStatus}</p>}
-                </div>
-                {isDatabaseEmpty && renderPasswordInput()}
-                {!isDatabaseEmpty && password === '' && renderPasswordInput()}
-                <div style={{ marginBottom: '30px' }}>
-                    <h2 style={{ fontSize: '24px', color: '#333' }}>Timestamp Frequency</h2>
-                    <select
-                        value={timestampFrequency}
-                        onChange={(e) => setTimestampFrequency(e.target.value)}
-                        style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
-                    >
-                        <option value="" disabled>Select Frequency</option>
-                        <option value="Daily">Daily</option>
-                        <option value="Weekly">Weekly</option>
-                        <option value="Monthly">Monthly</option>
-                    </select>
-                </div>
-                <button
-                    onClick={handleNext}
-                    disabled={
-                        !githubId ||
-                        !verifiedGithubAccessToken ||
-                        !connectionSuccessful ||
-                        !timestampFrequency ||
-                        !password ||
-                        (selectedService === 'aws' && !selectedBucket)
-                    }
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#6a1b9a',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: !githubId ||
-                            !verifiedGithubAccessToken ||
-                            !connectionSuccessful ||
-                            !timestampFrequency ||
-                            !password ||
-                            (selectedService === 'aws' && !selectedBucket)
-                            ? 'not-allowed'
-                            : 'pointer',
-                        display: 'block',
-                        margin: '0 auto',
-                        opacity: !githubId ||
-                            !verifiedGithubAccessToken ||
-                            !connectionSuccessful ||
-                            !timestampFrequency ||
-                            !password ||
-                            (selectedService === 'aws' && !selectedBucket)
-                            ? 0.5
-                            : 1,
-                        position: 'relative',
-                    }}
-                >
-                    {nextLoading ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Circles color="#FFF" height={20} width={20} />
-                        </div>
-                    ) : (
-                        'Next'
-                    )}
-                </button>
+			<div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f7f1fc', minHeight: '100vh' }}>
+				<Nav/>
+				<div style={{ paddingBlockStart: '40px' }}>
+					{showPasswordPopup && <PasswordPopup onClose={() => setShowPasswordPopup(false)} onSubmit={handlePasswordSubmit} />}
+					<div style={{ maxWidth: '600px', margin: '0 auto' }}>
+						<div style={{ marginBottom: '30px' }}>
+							<h2 style={{ fontSize: '24px', color: '#333' }}>Github Connection</h2>
+							{githubId && (
+								<div style={{ marginBottom: '10px', color: 'green' }}>
+									GitHub User ID: {githubId}
+								</div>
+							)}
+							<div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+								<input
+									type="password"
+									placeholder="Organization Personal Access Token"
+									value={githubToken}
+									onChange={(e) => setGithubToken(e.target.value)}
+									style={{ flex: 1, padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+								/>
+								<FaQuestionCircle
+									data-tooltip-id="githubTokenTip"
+									data-tooltip-content="To set up a personal access token, go to GitHub Settings > Developer settings > Personal access tokens."
+									style={{ marginLeft: '10px', color: '#888', cursor: 'pointer' }}
+								/>
+								<Tooltip id="githubTokenTip" place="top" />
+							</div>
+							<button onClick={handleGithubTestConnection} style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', position: 'relative' }}>
+								{githubLoading ? (
+									<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+										<Circles color="#FFF" height={20} width={20} />
+									</div>
+								) : (
+								'Test'
+								)}
+							</button>
+							{githubConnectionStatus && <p style={githubConnectionStatusStyle}>{githubConnectionStatus}</p>}
+						</div>
+						<div style={{ marginBottom: '30px' }}>
+							<h2 style={{ fontSize: '24px', color: '#333' }}>Select Database Service</h2>
+							<div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '20px' }}>
+								<Image
+									src={firebaseIcon}
+									alt="Firebase Icon"
+									height={60}
+									style={{ cursor: 'pointer' }}
+									onClick={() => setSelectedService('firebase')}
+								/>
+								<Image
+									src={s3Icon}
+									alt="S3 Icon"
+									height={60}
+									style={{ cursor: 'pointer' }}
+									onClick={() => setSelectedService('aws')}
+								/>
+							</div>
+							{renderServiceForm()}
+							{selectedService && (
+								<button onClick={handleTestConnection} style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', position: 'relative' }}>
+									{connectionLoading ? (
+										<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+											<Circles color="#FFF" height={20} width={20} />
+										</div>
+									) : (
+									'Test'
+									)}
+								</button>
+							)}
+							{connectionStatus && <p style={connectionStatusStyle}>{connectionStatus}</p>}
+						</div>
+						{isDatabaseEmpty && renderPasswordInput()}
+						{!isDatabaseEmpty && password === '' && renderPasswordInput()}
+						<div style={{ marginBottom: '30px' }}>
+							<h2 style={{ fontSize: '24px', color: '#333' }}>Timestamp Frequency</h2>
+							<select
+								value={timestampFrequency}
+								onChange={(e) => setTimestampFrequency(e.target.value)}
+								style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+							>
+								<option value="" disabled>Select Frequency</option>
+								<option value="Daily">Daily</option>
+								<option value="Weekly">Weekly</option>
+								<option value="Monthly">Monthly</option>
+							</select>
+						</div>
+						<button
+							onClick={handleNext}
+							disabled={
+								!githubId ||
+									!verifiedGithubAccessToken ||
+									!connectionSuccessful ||
+									!timestampFrequency ||
+									!password ||
+									(selectedService === 'aws' && !selectedBucket)
+							}
+							style={{
+								padding: '10px 20px',
+								backgroundColor: '#6a1b9a',
+								color: 'white',
+								border: 'none',
+								borderRadius: '5px',
+								cursor: !githubId ||
+									!verifiedGithubAccessToken ||
+									!connectionSuccessful ||
+									!timestampFrequency ||
+									!password ||
+									(selectedService === 'aws' && !selectedBucket)
+										? 'not-allowed'
+										: 'pointer',
+										display: 'block',
+										margin: '0 auto',
+										opacity: !githubId ||
+											!verifiedGithubAccessToken ||
+											!connectionSuccessful ||
+											!timestampFrequency ||
+											!password ||
+											(selectedService === 'aws' && !selectedBucket)
+												? 0.5
+												: 1,
+												position: 'relative',
+							}}
+						>
+							{nextLoading ? (
+								<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+									<Circles color="#FFF" height={20} width={20} />
+								</div>
+							) : (
+							'Next'
+							)}
+						</button>
 
-                {!isDatabaseEmpty && (
-                    <button
-                        onClick={handleReset}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#ff4c4c',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            display: 'block',
-                            margin: '20px auto 0 auto',
-                            position: 'relative',
-                        }}
-                    >
-                        {resetLoading ? (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Circles color="#FFF" height={20} width={20} />
-                            </div>
-                        ) : (
-                            'Erase Stored Values and Reset'
-                        )}
-                    </button>
-                )}
-            </div>
-        </div>
+						{!isDatabaseEmpty && (
+							<button
+								onClick={handleReset}
+								style={{
+									padding: '10px 20px',
+									backgroundColor: '#ff4c4c',
+									color: 'white',
+									border: 'none',
+									borderRadius: '5px',
+									cursor: 'pointer',
+									display: 'block',
+									margin: '20px auto 0 auto',
+									position: 'relative',
+								}}
+							>
+								{resetLoading ? (
+									<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+										<Circles color="#FFF" height={20} width={20} />
+									</div>
+								) : (
+								'Erase Stored Values and Reset'
+								)}
+							</button>
+						)}
+					</div>
+				</div>
+			</div>
     );
 }

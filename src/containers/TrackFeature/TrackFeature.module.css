@@ -1,8 +1,12 @@
+.featurePage {
+	min-height: 100vh;
+	background-color: #f7f1fc;
+}
+
 .container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f7f1fc;
     padding: 40px;
 }
 

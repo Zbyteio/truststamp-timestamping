@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import styles from './Dashboard.module.css';
 import { useSession } from 'next-auth/react';
 import DashboardModal from '@/components/DashboardModal';
-import logoTruststamp from '@/assets/icons/logoTruststamp.png';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Circles } from 'react-loader-spinner';
+import Nav from '@/components/Nav';
 
 export interface Feature {
     id: number;
@@ -145,28 +144,30 @@ export default function DashboardComponent() {
     }
 
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <Image src={logoTruststamp} alt="TrustStamp Logo" width={100} height={100} />
-                <button className={styles.addButton} onClick={handleAddFeatureClick}>Add Feature</button>
-            </div>
-            <h1 className={styles.title}>Features</h1>
-            <div className={styles.featureList}>
-                {features.map((featureResponse, index) => (
-                    <div key={index} className={styles.featureCard} onClick={() => handleFeatureClick(featureResponse)}>
-                        <h2 className={styles.featureTitle}>{featureResponse.feature.title}</h2>
-                        <p className={styles.featureDescription}>{featureResponse.feature.description}</p>
-                    </div>
-                ))}
-            </div>
-            {selectedFeature && (
-                <DashboardModal
-                    feature={selectedFeature}
-                    onClose={closeModal}
-                    awsCredentials={awsCredentials}
-                    firebaseCredentials={firebaseCredentials}
-                />
-            )}
-        </div>
+			<>
+				<Nav/>
+				<div className={styles.container}>
+					<div className={styles.header}>
+						<h1 className={styles.title}>Features</h1>
+						<button className={styles.addButton} onClick={handleAddFeatureClick}>Add Feature</button>
+					</div>
+					<div className={styles.featureList}>
+						{features.map((featureResponse, index) => (
+							<div key={index} className={styles.featureCard} onClick={() => handleFeatureClick(featureResponse)}>
+								<h2 className={styles.featureTitle}>{featureResponse.feature.title}</h2>
+								<p className={styles.featureDescription}>{featureResponse.feature.description}</p>
+							</div>
+						))}
+					</div>
+					{selectedFeature && (
+						<DashboardModal
+							feature={selectedFeature}
+							onClose={closeModal}
+							awsCredentials={awsCredentials}
+							firebaseCredentials={firebaseCredentials}
+						/>
+					)}
+				</div>
+			</>
     );
 }

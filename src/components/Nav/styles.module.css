@@ -1,0 +1,24 @@
+.nav {
+	z-index: 1;
+	position: sticky;
+	top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+	background: rgb(255, 206, 255, 0.9);
+	backdrop-filter: blur(8px);
+}
+
+.links {
+	display: flex;
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.link {
+	text-decoration: none;
+	color: #6a1b9a;
+}

@@ -81,7 +81,12 @@ export default function TrackFeatureContainer() {
                 try
                 {
 
-                const response = await fetch(`/api/database/password?email=${email}`);
+                    const response = await fetch(`/api/database/password?email=${email}`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        }
+                    });
 
                 if (!response.ok) {
                     throw new Error(`Failed to fetch decrypted password: ${response.statusText}`);
@@ -94,7 +99,7 @@ export default function TrackFeatureContainer() {
             }
             catch (err)
             {
-                router.push('/setup')
+                router.push('/login')
             }
             };
 

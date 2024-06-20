@@ -63,7 +63,6 @@ export default function DashboardComponent() {
 
                     const data = await response.json();
                     if (data.message === "Password not found") {
-                        console.log("in");
                         router.push('/setup');
                     }
                     else {
@@ -113,7 +112,6 @@ export default function DashboardComponent() {
     const fetchFeatures = async (email: string) => {
         const response = await fetch(`/api/database/saveFeature?email=${email}`);
         const data = await response.json();
-        console.log(data);
         setFeatures(data);
     };
 

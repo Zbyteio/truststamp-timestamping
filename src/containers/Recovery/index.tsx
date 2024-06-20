@@ -5,18 +5,28 @@ import styles from './RecoveryKeys.module.css';
 import logoTruststamp from '@/assets/icons/logoTruststamp.png';
 import { useKeys } from '@/context/KeysContext';
 import { Circles } from 'react-loader-spinner';
+import { useSession } from 'next-auth/react';
 
 const RecoveryContainer: React.FC = () => {
     const { publicKey, privateKey } = useKeys();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
+    const { data: session, status } = useSession();
 
     useEffect(() => {
-        if (publicKey !== '' && privateKey !== '') {
-            // If keys are fetched but not valid
-            setLoading(false);
+        if (status === 'authenticated' && session?.user?.email) {
+            if (publicKey !== '' && privateKey !== '') {
+                // If keys are fetched but not valid
+                setLoading(false);
+            }
         }
-    }, [publicKey, privateKey, router]);
+        else
+        {
+            if (status==="unauthenticated") {
+                router.push('/login');
+            }
+        }
+    }, [publicKey, privateKey, router, status, session]);
 
     const handleNextClick = () => {
         router.push('/setup');

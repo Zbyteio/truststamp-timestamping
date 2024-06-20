@@ -81,6 +81,11 @@ export default function DashboardComponent() {
 
             getPassword().catch(() => setIsLoading(false));
         }
+        else{
+            if (status==="unauthenticated") {
+                router.push('/login');
+            }
+        }
     }, [status, session]);
 
     const loadCredentials = async (email: string, password: string) => {

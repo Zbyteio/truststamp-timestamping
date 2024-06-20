@@ -71,8 +71,12 @@ export default function SetupContainer() {
                 console.log("No database");
             }
         } else {
-            // signOut();
+            if (status==="unauthenticated")
+                {
+                    router.push("/login");
+                }
             setLoading(false);
+
         }
     }, [status, email]);
 

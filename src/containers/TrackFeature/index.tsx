@@ -386,7 +386,6 @@ export default function TrackFeatureContainer() {
             const hash = sha256.sha256.create();
             hash.update(uint8Array);
             const hexHash = hash.hex();
-            console.log(hexHash);
 
             if (!publicKey || !privateKey) {
                 throw new Error('Public or private key not found');

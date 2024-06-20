@@ -14,7 +14,6 @@ export default function LoginContainer() {
 	useEffect(() => {
 
 		const routeIfLoggedIn = async () => {
-			console.log(status);
 			if (status === "authenticated" && session?.user?.email) {
 				const email = session.user.email;
 				if (publicKey && privateKey) {

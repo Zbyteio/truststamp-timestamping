@@ -88,8 +88,6 @@ export default function TrackFeatureContainer() {
 
                     const data = await response.json();
                     setPassword(data.password);
-                    await fetchOrganizations(email, data.password);
-                    setLoading(false);
                 }
                 catch (err) {
                     router.push('/setup')
@@ -108,76 +106,92 @@ export default function TrackFeatureContainer() {
     }, [status, session]);
 
     useEffect(() => {
-        if (!email || !password) return;
+			if (!email || !password) return;
 
-        const params = new URLSearchParams(window.location.search);
-        params.has('id') && setFeatureIfEditing(parseInt(params.get('id') as string));
+			(async () => {
+				const promises = [fetchOrganizations(email, password)];
+
+				const params = new URLSearchParams(window.location.search);
+				if (params.has('id')) {
+					promises.push(loadFeature(parseInt(params.get('id') as string)));
+				}
+
+				const [orgs, feature] = await Promise.all(promises);
+
+				if (!feature) {
+					return setSelectedOrg(orgs[0] ?? '');
+				}
+
+				setTitle(feature.title);
+				setDescription(feature.description);
+				setSelectedOrg(feature.org);
+				setSelectedRepository(feature.repo);
+				setSelectedBranch(feature.branch);
+
+				setInitialValues({
+					title: feature.title,
+					description: feature.description,
+					org: feature.org,
+					repo: feature.repo,
+					branch: feature.branch
+				});
+
+				const files: string[] = [];
+				const folders: string[] = [];
+				feature?.githubPaths.forEach((item: { type: string, path: string }) => {
+					item.type === 'file' && files.push(item.path);
+					item.type === 'folder' && folders.push(item.path);
+				});
+				setSelectedFiles(files);
+				setSelectedFolders(folders);
+
+				feature.org && feature.repo && feature.branch && await Promise.all([
+					fetchRepositories(feature.org, false),
+					fetchBranches(feature.repo, false),
+					fetchFileStructure(feature.repo, feature.branch)
+				]);
+
+				let targetCrumb = 0;
+				feature.org && targetCrumb++;
+				feature.repo && targetCrumb++;
+				feature.branch && targetCrumb++;
+				setCrumb(targetCrumb);
+			})();
     }, [email, password]);
 
-    const setFeatureIfEditing = async (featureId: number) => {
-        const res = await fetch(`/api/database/features?id=${featureId}`);
-        if (!res.ok) return console.warn(`Could not fetch feature with id ${featureId}.`);
+    const loadFeature = async (featureId: number) => {
+			const res = await fetch(`/api/database/features?id=${featureId}`);
+			if (!res.ok) return console.warn(`Could not fetch feature with id ${featureId}.`);
 
-        const feature = await res.json();
-        if (!feature) return console.warn(`No feature exists with id ${featureId}.`);
+			const feature = await res.json();
+			!feature && console.warn(`No feature exists with id ${featureId}.`);
 
-        setTitle(feature.title);
-        setDescription(feature.description);
-        setSelectedOrg(feature.org);
-        setSelectedRepository(feature.repo);
-        setSelectedBranch(feature.branch);
-
-        setInitialValues({
-            title: feature.title,
-            description: feature.description,
-            org: feature.org,
-            repo: feature.repo,
-            branch: feature.branch
-        });
-
-        const files: string[] = [];
-        const folders: string[] = [];
-        feature?.githubPaths.forEach((item: { type: string, path: string }) => {
-            item.type === 'file' && files.push(item.path);
-            item.type === 'folder' && folders.push(item.path);
-        });
-        setSelectedFiles(files);
-        setSelectedFolders(folders);
-
-        feature.org && feature.repo && feature.branch && await Promise.all([
-            fetchRepositories(feature.org),
-            fetchBranches(feature.repo),
-            fetchFileStructure(feature.repo, feature.branch)
-        ]);
-
-        let targetCrumb = 0;
-        feature.org && targetCrumb++;
-        feature.repo && targetCrumb++;
-        feature.branch && targetCrumb++;
-        setCrumb(targetCrumb);
-    }
-
-    const fetchOrganizations = async (email: string, password: string) => {
-        setOrgLoading(true);
-        try {
-            const response = await fetch(`/api/github/organizations?email=${email}&password=${password}`);
-            const data = await response.json();
-            setOrganizations(Array.isArray(data) ? data : []);
-            setSelectedOrg(data[0] ?? '');
-        } catch (error) {
-            console.error('Error fetching organizations:', error);
-        } finally {
-            setOrgLoading(false);
-        }
+			return feature;
     };
 
-    const fetchRepositories = async (org: string) => {
+		const fetchOrganizations = async (email: string, password: string) => {
+			setOrgLoading(true);
+			let data;
+			try {
+				const response = await fetch(`/api/github/organizations?email=${email}&password=${password}`);
+				data = await response.json();
+				data = Array.isArray(data) ? data : [];
+				setOrganizations(data);
+			} catch (error) {
+				console.error('Error fetching organizations:', error);
+			}
+
+			setOrgLoading(false);
+			return data;
+		};
+
+    const fetchRepositories = async (org: string, setState = true) => {
         setRepoLoading(true);
         try {
             const response = await fetch(`/api/github/repositories?email=${email}&password=${password}&org=${org}`);
             const data = await response.json();
             setRepositories(Array.isArray(data) ? data : []);
-            setSelectedRepository(data[0]?.full_name ?? '');
+            setState && !selectedRepository && setSelectedRepository(data[0]?.full_name ?? '');
         } catch (error) {
             console.error('Error fetching repositories:', error);
         } finally {
@@ -185,13 +199,13 @@ export default function TrackFeatureContainer() {
         }
     };
 
-    const fetchBranches = async (repository: string) => {
+    const fetchBranches = async (repository: string, setState = true) => {
         setBranchLoading(true);
         try {
             const response = await fetch(`/api/github/branches?repository=${repository}&email=${email}&password=${password}`);
             const data = await response.json();
             setBranches(Array.isArray(data) ? data : []);
-            setSelectedBranch(data[0]?.name ?? '');
+            setState && !selectedBranch && setSelectedBranch(data[0]?.name ?? '');
         } catch (error) {
             console.error('Error fetching branches:', error);
         } finally {
@@ -648,7 +662,7 @@ export default function TrackFeatureContainer() {
                                         <Circles color="#00BFFF" height={40} width={40} />
                                     </div>
                                 ) : (
-                                    <select defaultValue={initialValues?.org} onChange={e => setSelectedOrg(e.target.value)}>
+                                    <select defaultValue={initialValues?.org || selectedOrg} onChange={e => setSelectedOrg(e.target.value)}>
                                         {organizations.map((org, index) => (
                                             <option key={org} value={org}>{org}</option>
                                         ))}
@@ -666,7 +680,7 @@ export default function TrackFeatureContainer() {
                                     repositories.length ? (
                                         <>
                                             <h2>Repositories for {selectedOrg}</h2>
-                                            <select defaultValue={initialValues?.repo} onChange={e => setSelectedRepository(e.target.value)}>
+                                            <select defaultValue={initialValues?.repo || selectedRepository} onChange={e => setSelectedRepository(e.target.value)}>
                                                 {repositories.map((repo, index) => (
                                                     <option key={repo.id} value={repo.full_name}>{repo.name}</option>
                                                 ))}
@@ -688,7 +702,7 @@ export default function TrackFeatureContainer() {
                                     branches.length ? (
                                         <>
                                             <h2>Branches for {selectedRepository}</h2>
-                                            <select defaultValue={initialValues?.branch} onChange={e => setSelectedBranch(e.target.value)}>
+                                            <select defaultValue={initialValues?.branch || selectedBranch} onChange={e => setSelectedBranch(e.target.value)}>
                                                 {branches.map((branch, index) => (
                                                     <option key={branch.name} value={branch.name}>{branch.name}</option>
                                                 ))}

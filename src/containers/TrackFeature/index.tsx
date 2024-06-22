@@ -118,6 +118,8 @@ export default function TrackFeatureContainer() {
 
 				const [orgs, feature] = await Promise.all(promises);
 
+				setLoading(false);
+
 				if (!feature) {
 					return setSelectedOrg(orgs[0] ?? '');
 				}

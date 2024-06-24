@@ -6,6 +6,7 @@ import logoTruststamp from '@/assets/icons/logoTruststamp.png';
 import { useKeys } from '@/context/KeysContext';
 import { Circles } from 'react-loader-spinner';
 import { useSession } from 'next-auth/react';
+import Nav from '@/components/Nav';
 
 const RecoveryContainer: React.FC = () => {
     const { publicKey, privateKey } = useKeys();
@@ -20,9 +21,8 @@ const RecoveryContainer: React.FC = () => {
                 setLoading(false);
             }
         }
-        else
-        {
-            if (status==="unauthenticated") {
+        else {
+            if (status === "unauthenticated") {
                 router.push('/login');
             }
         }
@@ -42,27 +42,30 @@ const RecoveryContainer: React.FC = () => {
     }
 
     return (
-        <div className={styles.container}>
-            <div className={styles.logoContainer}>
-                <Image src={logoTruststamp} alt="TrustStamp Logo" width={80} height={80} />
-            </div>
-            <div className={styles.recoveryContainer}>
-                <h2 className={styles.heading}>Recovery Keys</h2>
-                <p className={styles.instructions}>
-                    Below you will find your recovery keys. Please save them to ensure you maintain access to the data.
-                </p>
-                <div className={styles.keysContainer}>
-                    <p><strong>Public Key:</strong> {publicKey}</p>
-                    <p><strong>Private Key:</strong></p>
-                    <div className={styles.privateKeyContainer}>
-                        {privateKey.split('').map((char, index) => (
-                            <span key={index}>{char}</span>
-                        ))}
-                    </div>
+        <>
+            <Nav />
+            <div className={styles.container}>
+                <div className={styles.logoContainer}>
+                    <Image src={logoTruststamp} alt="TrustStamp Logo" width={80} height={80} />
                 </div>
-                <button className={styles.nextButton} onClick={handleNextClick}>Next</button>
+                <div className={styles.recoveryContainer}>
+                    <h2 className={styles.heading}>Recovery Keys</h2>
+                    <p className={styles.instructions}>
+                        Below you will find your recovery keys. Please save them to ensure you maintain access to the data.
+                    </p>
+                    <div className={styles.keysContainer}>
+                        <p><strong>Public Key:</strong> {publicKey}</p>
+                        <p><strong>Private Key:</strong></p>
+                        <div className={styles.privateKeyContainer}>
+                            {privateKey.split('').map((char, index) => (
+                                <span key={index}>{char}</span>
+                            ))}
+                        </div>
+                    </div>
+                    <button className={styles.nextButton} onClick={handleNextClick}>Next</button>
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 

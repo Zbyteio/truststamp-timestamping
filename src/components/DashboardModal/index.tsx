@@ -47,6 +47,7 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
             const fileHash = await fetchAndHashFile(file.random);
 
             return {
+                random: file.random,
                 originalName: file.originalName,
                 transactionHash: explorerLink,
                 computedHash: fileHash,
@@ -61,24 +62,39 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
         setIsLoading(false);
     };
 
-    const fetchAndHashFile = async (fileName: string) => {
+    const fetchFileContents = async (fileName: string) => {
         const url = awsCredentials
             ? `/api/aws/getFile?fileName=${fileName}&accessKey=${awsCredentials.accessKey}&secretKey=${awsCredentials.secretKey}&bucket=${awsCredentials.bucket}`
             : `/api/firebase/getFile?fileName=${fileName}&databaseUrl=${firebaseCredentials?.databaseUrl}&serviceAccount=${firebaseCredentials?.serviceAccount}&bucket=${firebaseCredentials?.bucket}`;
 
         const response = await fetch(url);
         const fileBase64 = await response.json();
-        const fileBuffer = Buffer.from(fileBase64.file, 'base64');
+        return Buffer.from(fileBase64.file, 'base64');
+    };
+
+    const fetchAndHashFile = async (fileName: string) => {
+        const fileBuffer = await fetchFileContents(fileName);
 
         // Step 3: Calculate the SHA-256 hash using js-sha256
         const hash = sha256.sha256.create();
         hash.update(fileBuffer);
-        const hexHash = hash.hex();
-        return hexHash;
+        return hash.hex();
     };
 
-    const handleAddToFeature = () => {
-        router.push(`/feature?id=${feature.id}`);
+    const downloadFile = async (file: any) => {
+        const contents = await fetchFileContents(file.random);
+        if (/\.zip$/.test(file.originalName)) {
+           downloadString(contents.toString('base64'), file.originalName, 'data:application/zip;base64,');
+        } else {
+           downloadString(contents.toString('utf-8'), file.originalName);
+        }
+    };
+
+    const downloadString = (contents: string, fileName: string = 'download.txt', prefix: string = 'data:text/plain;charset=utf-8,') => {
+			  const a = document.createElement('a');
+        a.href = `${prefix}${encodeURIComponent(contents)}`;
+        a.download = fileName;
+        a.click();
     };
 
     return (
@@ -101,6 +117,7 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
                                 <th>Timestamping date</th>
                                 <th>Timestamping time</th>
                                 <th>View on Blockchain</th>
+                                <th>Download File</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -114,12 +131,13 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
                                     <td>{file.timestampDate}</td>
                                     <td>{file.timestampTime}</td>
                                     <td><a href={file.transactionHash} target="_blank" rel="noopener noreferrer">Link</a></td>
+                                    <td><button className={styles.downloadButton} onClick={() => downloadFile(file)}>Download</button></td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 )}
-                <button className={styles.addButton} onClick={handleAddToFeature}>Add to feature</button>
+                <a className={styles.addButton} href={`/feature?id=${feature.id}`}>Add to feature</a>
             </div>
         </div>
     );

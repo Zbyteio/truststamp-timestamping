@@ -100,8 +100,6 @@ export default function TrackFeatureContainer() {
             if (status === "unauthenticated") {
                 router.push("/login");
             }
-
-            setLoading(false);
         }
     }, [status, session]);
 
@@ -113,16 +111,28 @@ export default function TrackFeatureContainer() {
 
 				const params = new URLSearchParams(window.location.search);
 				if (params.has('id')) {
-					promises.push(loadFeature(parseInt(params.get('id') as string)));
+					promises.push(fetchFeature(parseInt(params.get('id') as string)));
 				}
 
 				const [orgs, feature] = await Promise.all(promises);
 
-				setLoading(false);
-
 				if (!feature) {
+					setLoading(false);
 					return setSelectedOrg(orgs[0] ?? '');
 				}
+
+				const { accessKey, secretKey, bucket } = await fetchAwsCredentials(password);
+
+				const uploadedFiles = feature.files.filter((f: any) => !/\.zip$/.test(f.originalName));
+
+				const contents = await Promise.all(uploadedFiles.map(async (file: any) => {
+					const contents = await fetchFileContents(file.random, accessKey, secretKey, bucket);
+					return Buffer.from(contents.toString('utf-8'), 'utf-8');
+				}));
+
+				setUploadedFiles(uploadedFiles.map((file: any, i: number) => {
+					return new File(contents[i], file.originalName);
+				}));
 
 				setTitle(feature.title);
 				setDescription(feature.description);
@@ -158,10 +168,12 @@ export default function TrackFeatureContainer() {
 				feature.repo && targetCrumb++;
 				feature.branch && targetCrumb++;
 				setCrumb(targetCrumb);
+
+				setLoading(false);
 			})();
     }, [email, password]);
 
-    const loadFeature = async (featureId: number) => {
+    const fetchFeature = async (featureId: number) => {
 			const res = await fetch(`/api/database/features?id=${featureId}`);
 			if (!res.ok) return console.warn(`Could not fetch feature with id ${featureId}.`);
 
@@ -170,6 +182,30 @@ export default function TrackFeatureContainer() {
 
 			return feature;
     };
+
+		const fetchFileContents = async (fileName: string, accessKey: string, secretKey: string, bucket: string) => {
+			const url = `/api/aws/getFile?fileName=${fileName}&accessKey=${accessKey}&secretKey=${secretKey}&bucket=${bucket}`;
+			const response = await fetch(url);
+			const fileBase64 = await response.json();
+			return Buffer.from(fileBase64.file, 'base64');
+		};
+
+		const fetchAwsCredentials = async (password: string) => {
+			const [accessKey, secretKey, bucket] = await Promise.all([
+				fetchCredential('aws', 'accessKey', password),
+				fetchCredential('aws', 'secretKey', password),
+				fetchCredential('database', 'bucket', password)
+			]);
+			return { accessKey, secretKey, bucket };
+		};
+
+		const fetchFirebaseCredentials = async (password: string) => {
+			const [databaseUrl, serviceAccount] = await Promise.all([
+				fetchCredential('firebase', 'databaseUrl', password),
+				fetchCredential('firebase', 'serviceAccount', password),
+			]);
+			return { databaseUrl, serviceAccount };
+		};
 
 		const fetchOrganizations = async (email: string, password: string) => {
 			setOrgLoading(true);
@@ -743,7 +779,7 @@ export default function TrackFeatureContainer() {
                                 <Circles color="#FFF" height={20} width={20} />
                             </div>
                         ) : (
-                            'Submit'
+													'Submit'
                         )}
                     </button>
                 </div>

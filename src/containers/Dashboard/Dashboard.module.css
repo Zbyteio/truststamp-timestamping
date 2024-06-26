@@ -44,8 +44,16 @@
 }
 
 .featureList {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 1fr);
     gap: 20px;
+    --cols: 5;
+		@media screen and (max-width: 900px) {
+			--cols: 3;
+		}
+		@media screen and (max-width: 600px) {
+			--cols: 2;
+		}
 }
 
 .featureCard {

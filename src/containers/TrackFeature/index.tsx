@@ -49,6 +49,7 @@ export default function TrackFeatureContainer() {
     const [crumb, setCrumb] = useState<number>(0); // 0 org, 1 repo, 2 branch, 3 files
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
+    const [fetchedFiles, setFetchedFiles] = useState<File[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [selectedRepositories, setSelectedRepositories] = useState<{ [key: string]: boolean }>({});
     const [repositories, setRepositories] = useState<Repository[]>([]);
@@ -123,14 +124,15 @@ export default function TrackFeatureContainer() {
 
 				const { accessKey, secretKey, bucket } = await fetchAwsCredentials(password);
 
-				const uploadedFiles = feature.files.filter((f: any) => !/[\dT]+Z\.zip$/.test(f.originalName));
+				// excluding zipped github files
+				const featureFiles = feature.files.filter((f: any) => !/[\dT]+Z\.zip$/.test(f.originalName));
 
-				const contents = await Promise.all(uploadedFiles.map(async (file: any) => {
+				const contents = await Promise.all(featureFiles.map(async (file: any) => {
 					const contents = await fetchFileContents(file.random, accessKey, secretKey, bucket);
 					return Buffer.from(contents.toString('utf-8'), 'utf-8');
 				}));
 
-				setUploadedFiles(uploadedFiles.map((file: any, i: number) => {
+				setFetchedFiles(featureFiles.map((file: any, i: number) => {
 					return new File(contents[i], file.originalName);
 				}));
 
@@ -489,7 +491,7 @@ export default function TrackFeatureContainer() {
         }
     };
 
-    const renderFilePreview = (file: File) => {
+		const renderFilePreview = (file: File, removeable: boolean = true) => {
         const objectUrl = URL.createObjectURL(file);
         const isImage = file.type.startsWith('image/');
         return (
@@ -501,7 +503,7 @@ export default function TrackFeatureContainer() {
                         <span>{file.name}</span>
                     </div>
                 )}
-                <button className={styles.removeFileBtn} onClick={() => handleRemoveFile(uploadedFiles.indexOf(file))}>Remove</button>
+                {removeable && <button className={styles.removeFileBtn} onClick={() => handleRemoveFile(uploadedFiles.indexOf(file))}>Remove</button>}
             </div>
         );
     };
@@ -663,7 +665,8 @@ export default function TrackFeatureContainer() {
                                 <button className={styles.chooseFilesBtn} onClick={handleChooseFilesClick}>Choose Files</button>
                             </div>
                             <div className={styles.filePreviewContainer}>
-                                {uploadedFiles.map((file) => renderFilePreview(file))}
+                                {fetchedFiles.map((file) => renderFilePreview(file, false))}
+                                {uploadedFiles.map((file) => renderFilePreview(file, true))}
                             </div>
                         </div>
                     </div>

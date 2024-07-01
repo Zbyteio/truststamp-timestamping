@@ -58,8 +58,6 @@ export const updateFeatureCron = (featureId: number, originalFileName: string, r
   export const storeFeature = (email: string, title: string, description: string, org: string, repo: string, branch: string, fileNames: { originalName: string, random: string, transactionHash: string }[]): void => {
     const featureId = getFeatureId(email, title, description, org, repo, branch);
 
-    fdb.prepare('DELETE FROM files WHERE feature_id = ?').run(featureId);
-
     const insertFile = fdb.prepare(`
     INSERT INTO files (feature_id, original_file_name, randomized_file_name, transaction_hash)
     VALUES (?, ?, ?, ?)

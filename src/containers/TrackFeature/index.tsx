@@ -123,7 +123,7 @@ export default function TrackFeatureContainer() {
 
 				const { accessKey, secretKey, bucket } = await fetchAwsCredentials(password);
 
-				const uploadedFiles = feature.files.filter((f: any) => !/\.zip$/.test(f.originalName));
+				const uploadedFiles = feature.files.filter((f: any) => !/[\dT]+Z\.zip$/.test(f.originalName));
 
 				const contents = await Promise.all(uploadedFiles.map(async (file: any) => {
 					const contents = await fetchFileContents(file.random, accessKey, secretKey, bucket);
@@ -493,7 +493,7 @@ export default function TrackFeatureContainer() {
         const objectUrl = URL.createObjectURL(file);
         const isImage = file.type.startsWith('image/');
         return (
-            <div key={file.name} className={styles.filePreviewItem}>
+            <div key={`${file.name}-${file.lastModified}`} className={styles.filePreviewItem}>
                 {isImage ? (
                     <Image src={objectUrl} alt={file.name} className={styles.filePreviewImage} width={100} height={100} />
                 ) : (

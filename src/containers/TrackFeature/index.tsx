@@ -50,6 +50,7 @@ export default function TrackFeatureContainer() {
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [fetchedFiles, setFetchedFiles] = useState<File[]>([]);
+    const [fetchedFilesContent, setFetchedFilesContent] = useState<{ file: File, contents: string }[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [selectedRepositories, setSelectedRepositories] = useState<{ [key: string]: boolean }>({});
     const [repositories, setRepositories] = useState<Repository[]>([]);
@@ -127,14 +128,23 @@ export default function TrackFeatureContainer() {
 				// excluding zipped github files
 				const featureFiles = feature.files.filter((f: any) => !/[\dT]+Z\.zip$/.test(f.originalName));
 
-				const contents = await Promise.all(featureFiles.map(async (file: any) => {
-					const contents = await fetchFileContents(file.random, accessKey, secretKey, bucket);
-					return Buffer.from(contents.toString('utf-8'), 'utf-8');
+				const contents = await Promise.all(featureFiles.map((file: any) => {
+					return fetchFileContents(file.random, accessKey, secretKey, bucket);
 				}));
 
-				setFetchedFiles(featureFiles.map((file: any, i: number) => {
-					return new File(contents[i], file.originalName);
-				}));
+				const imageExts = ['png', 'jpg', 'jpeg', 'webp', 'svg'];
+				const fetchedFiles = featureFiles.map((file: any, i: number) => {
+					const ext = file.originalName.includes('.') && file.originalName.split('.').pop();
+					const type = imageExts.includes(ext) ? `image/${ext}` : '';
+					return new File([Buffer.from(contents[i])], file.originalName, { type });
+				});
+
+				setFetchedFiles(fetchedFiles);
+
+				setFetchedFilesContent(contents.map((contents: string, i: number) => ({
+					file: fetchedFiles[i],
+					contents
+				})));
 
 				setTitle(feature.title);
 				setDescription(feature.description);
@@ -189,7 +199,7 @@ export default function TrackFeatureContainer() {
 			const url = `/api/aws/getFile?fileName=${fileName}&accessKey=${accessKey}&secretKey=${secretKey}&bucket=${bucket}`;
 			const response = await fetch(url);
 			const fileBase64 = await response.json();
-			return Buffer.from(fileBase64.file, 'base64');
+			return fileBase64.file;
 		};
 
 		const fetchAwsCredentials = async (password: string) => {
@@ -491,9 +501,27 @@ export default function TrackFeatureContainer() {
         }
     };
 
-		const renderFilePreview = (file: File, removeable: boolean = true) => {
-        const objectUrl = URL.createObjectURL(file);
+    const renderFilePreview = (file: File, isRemote: boolean = false) => {
         const isImage = file.type.startsWith('image/');
+        let objectUrl = '';
+
+        if (isImage) {
+            if (isRemote) {
+                const base64 = fetchedFilesContent.find(f => f.file === file)?.contents;
+                const ext = {
+                    '': 'png',
+                    svg: 'svg+xml',
+                    png: 'png',
+                    jpg: 'jpg',
+                    jpeg: 'jpg',
+                    webp: 'webp'
+                }[file.name.split('.').pop() || ''];
+                objectUrl = `data:image/${ext};base64,${base64}`;
+            } else {
+                objectUrl = URL.createObjectURL(file);
+            }
+        }
+
         return (
             <div key={`${file.name}-${file.lastModified}`} className={styles.filePreviewItem}>
                 {isImage ? (
@@ -503,7 +531,7 @@ export default function TrackFeatureContainer() {
                         <span>{file.name}</span>
                     </div>
                 )}
-                {removeable && <button className={styles.removeFileBtn} onClick={() => handleRemoveFile(uploadedFiles.indexOf(file))}>Remove</button>}
+                {!isRemote && <button className={styles.removeFileBtn} onClick={() => handleRemoveFile(uploadedFiles.indexOf(file))}>Remove</button>}
             </div>
         );
     };
@@ -665,8 +693,8 @@ export default function TrackFeatureContainer() {
                                 <button className={styles.chooseFilesBtn} onClick={handleChooseFilesClick}>Choose Files</button>
                             </div>
                             <div className={styles.filePreviewContainer}>
-                                {fetchedFiles.map((file) => renderFilePreview(file, false))}
-                                {uploadedFiles.map((file) => renderFilePreview(file, true))}
+                                {fetchedFiles.map((file) => renderFilePreview(file, true))}
+                                {uploadedFiles.map((file) => renderFilePreview(file, false))}
                             </div>
                         </div>
                     </div>

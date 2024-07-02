@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { processGithubZip } from '@/utils/cron';
-import { getAllEmails, getCredential } from '@/utils/credentials';
+import { getAllEmails, getPassword, getCredential } from '@/utils/credentials';
 
 export async function scheduleCronJobs() {
     const emails = getAllEmails();
@@ -14,14 +14,7 @@ export async function scheduleCronJobs() {
 
         console.log(`Processing email: ${email}`);
         try {
-            const response = await fetch(`${process.env.NEXTAUTH_URL}/api/database/password?email=${encodeURIComponent(email)}`);
-            if (!response.ok) {
-                console.log(`Failed to fetch password for ${email}`);
-                continue;
-            }
-
-            const data = await response.json();
-            const password = data.password;
+            const password = await getPassword(email);
             const timestampFrequency = await getCredential(email, 'timestampFrequency', 'value', password);
 
             // Schedule the cron job based on the timestampFrequency

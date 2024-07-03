@@ -14,7 +14,7 @@ export async function scheduleCronJobs() {
 
         console.log(`Processing email: ${email}`);
         try {
-            const password = await getPassword(email);
+            const password = await getPassword(email) || "";
             const timestampFrequency = await getCredential(email, 'timestampFrequency', 'value', password);
 
             // Schedule the cron job based on the timestampFrequency

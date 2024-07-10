@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const callCronAPI = async (retries = 5, delay = 5000) => {
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch('http://localhost:3000/api/cron/cronStart', {
+      const response = await fetch('http://localhost:3000/api/cron/cronStart?cron', {
         method: 'GET',
       });
       const data = await response.json();

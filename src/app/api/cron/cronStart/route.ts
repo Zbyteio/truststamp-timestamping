@@ -4,7 +4,7 @@ import { scheduleCronJobs } from '@/utils/scheduleCron'; // Update the path as n
 let jobsScheduled = false;
 
 export async function GET(req: NextRequest) {
-    if (!jobsScheduled) {
+    if (!jobsScheduled && req.nextUrl.searchParams.has('cron')) {
         await scheduleCronJobs().catch((error) => {
             console.error('Error scheduling cron jobs:', error);
         });

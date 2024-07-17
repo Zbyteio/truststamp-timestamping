@@ -27,8 +27,8 @@
     background-color: #a020f0;
     color: white;
     border: none;
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 12px 24px; /* Increased padding for larger button */
+    font-size: 18px; /* Increased font size */
     cursor: pointer;
     border-radius: 5px;
 }
@@ -38,7 +38,7 @@
 }
 
 .title {
-    font-size: 24px;
+    font-size: 28px; /* Increased font size */
     color: #333;
     margin-bottom: 20px;
 }
@@ -64,19 +64,41 @@
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     text-align: left;
+    height: auto; /* Allow height to adjust to content */
+    overflow: hidden; /* Hide overflow content */
+}
+
+.featureTitleContainer {
+    height: 60px; /* Adjusted height for larger font */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Align text to the top */
 }
 
 .featureTitle {
-    font-size: 18px;
+    font-size: 22px; /* Increased font size */
     color: #a020f0;
-    margin-bottom: 10px;
-    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* Prevent wrapping */
+    display: block;
+    max-height: 100%; /* Ensure it doesn't exceed container */
+}
+
+.featureDescriptionContainer {
+    height: 80px; /* Adjusted height for larger font */
+    display: flex;
+    align-items: flex-start;
+    margin-top: 10px;
 }
 
 .featureDescription {
-    font-size: 14px;
+    font-size: 16px; /* Increased font size */
     color: #666;
-    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* Prevent wrapping */
+    display: block;
+    max-height: 100%; /* Ensure it doesn't exceed container */
 }

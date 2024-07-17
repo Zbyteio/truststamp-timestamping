@@ -48,12 +48,12 @@
     grid-template-columns: repeat(var(--cols), 1fr);
     gap: 20px;
     --cols: 5;
-		@media screen and (max-width: 900px) {
-			--cols: 3;
-		}
-		@media screen and (max-width: 600px) {
-			--cols: 2;
-		}
+    @media screen and (max-width: 900px) {
+        --cols: 3;
+    }
+    @media screen and (max-width: 600px) {
+        --cols: 2;
+    }
 }
 
 .featureCard {
@@ -62,21 +62,21 @@
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
-    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+    justify-content: flex-start;
+    text-align: left;
 }
 
 .featureTitle {
     font-size: 18px;
     color: #a020f0;
     margin-bottom: 10px;
+    text-align: center;
 }
 
 .featureDescription {
     font-size: 14px;
     color: #666;
+    text-align: left;
 }

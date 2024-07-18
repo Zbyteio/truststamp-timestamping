@@ -1,7 +1,14 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 
-const dbPath = path.resolve(process.cwd(), 'feature-data.db');
+// Ensure the data directory exists
+const dataDir = path.resolve(process.cwd(), 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const dbPath = path.resolve(dataDir, 'feature-data.db');
 const fdb = new Database(dbPath, { verbose: console.log });
 
 console.log('Tables dropped successfully.');
@@ -42,17 +49,17 @@ const pragma: any = fdb.pragma(`table_info(features);`);
 
 // add `org` column to `features`
 if (!pragma.find((colData: any) => colData.name === 'org')) {
-	fdb.exec(`ALTER TABLE features ADD org TEXT`);
+  fdb.exec(`ALTER TABLE features ADD org TEXT`);
 }
 
 // add `repo` column to `features`
 if (!pragma.find((colData: any) => colData.name === 'repo')) {
-	fdb.exec(`ALTER TABLE features ADD repo TEXT`);
+  fdb.exec(`ALTER TABLE features ADD repo TEXT`);
 }
 
 // add `branch` column to `features`
 if (!pragma.find((colData: any) => colData.name === 'branch')) {
-	fdb.exec(`ALTER TABLE features ADD branch TEXT`);
+  fdb.exec(`ALTER TABLE features ADD branch TEXT`);
 }
 
 export default fdb;

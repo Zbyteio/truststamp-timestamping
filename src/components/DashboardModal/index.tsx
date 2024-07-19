@@ -38,7 +38,18 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
 
         const filePromises = feature.files.map(async (file) => {
             const onChainData = data.result.find((d: any) => d[2] === file.random);
-            if (!onChainData) return null;
+            if (!onChainData) {
+                return {
+                    random: file.random,
+                    originalName: file.originalName,
+                    transactionHash: null,
+                    computedHash: null,
+                    onChainHash: null,
+                    timestampDate: null,
+                    timestampTime: null,
+                    message: "Blockchain still indexing..."
+                };
+            }
 
             const explorerLink = `https://polygonscan.com/tx/${file.transactionHash}`;
             const onChainHash = onChainData[1];
@@ -54,11 +65,12 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
                 onChainHash: onChainHash,
                 timestampDate: new Date(blockTime * 1000).toLocaleDateString(),
                 timestampTime: new Date(blockTime * 1000).toLocaleTimeString(),
+                message: null
             };
         });
 
         const results = await Promise.all(filePromises);
-        setFileData(results.filter((result) => result !== null));
+        setFileData(results);
         setIsLoading(false);
     };
 
@@ -91,7 +103,7 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
     };
 
     const downloadString = (contents: string, fileName: string = 'download.txt', prefix: string = 'data:text/plain;charset=utf-8,') => {
-			  const a = document.createElement('a');
+        const a = document.createElement('a');
         a.href = `${prefix}${encodeURIComponent(contents)}`;
         a.download = fileName;
         a.click();
@@ -125,13 +137,19 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
                                 <tr key={index}>
                                     <td>{file.originalName}</td>
                                     <td>
-                                        <div>On-chain hash: {file.onChainHash}</div>
-                                        <div>Hash from database: {file.computedHash}</div>
+                                        {file.message ? (
+                                            <div>{file.message}</div>
+                                        ) : (
+                                            <>
+                                                <div>On-chain hash: {file.onChainHash}</div>
+                                                <div>Hash from database: {file.computedHash}</div>
+                                            </>
+                                        )}
                                     </td>
-                                    <td>{file.timestampDate}</td>
-                                    <td>{file.timestampTime}</td>
-                                    <td><a href={file.transactionHash} target="_blank" rel="noopener noreferrer">Link</a></td>
-                                    <td><button className={styles.downloadButton} onClick={() => downloadFile(file)}>Download</button></td>
+                                    <td>{file.timestampDate || 'N/A'}</td>
+                                    <td>{file.timestampTime || 'N/A'}</td>
+                                    <td>{file.transactionHash ? <a href={file.transactionHash} target="_blank" rel="noopener noreferrer">Link</a> : 'N/A'}</td>
+                                    <td>{file.computedHash ? <button className={styles.downloadButton} onClick={() => downloadFile(file)}>Download</button> : 'N/A'}</td>
                                 </tr>
                             ))}
                         </tbody>

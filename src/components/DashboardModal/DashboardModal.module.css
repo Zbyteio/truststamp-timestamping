@@ -45,11 +45,11 @@
 .modalTitle {
     font-size: 24px;
     margin-bottom: 10px;
-    text-align: center;
+    text-align: left;
 }
 
 .description {
-    text-align: center;
+    text-align: left;
     margin-bottom: 20px;
 }
 

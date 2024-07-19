@@ -38,7 +38,7 @@
 }
 
 .title {
-    font-size: 28px; /* Increased font size */
+    font-size: 28px; 
     color: #333;
     margin-bottom: 20px;
 }
@@ -77,7 +77,7 @@
 }
 
 .featureTitle {
-    font-size: 22px; /* Increased font size */
+    font-size: 16px; 
     color: #a020f0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -94,7 +94,7 @@
 }
 
 .featureDescription {
-    font-size: 16px; /* Increased font size */
+    font-size: 12px; /* Increased font size */
     color: #666;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -75,13 +75,31 @@ const DashboardModal: React.FC<ModalProps> = ({ feature, onClose, awsCredentials
     };
 
     const fetchFileContents = async (fileName: string) => {
-        const url = awsCredentials
-            ? `/api/aws/getFile?fileName=${fileName}&accessKey=${awsCredentials.accessKey}&secretKey=${awsCredentials.secretKey}&bucket=${awsCredentials.bucket}`
-            : `/api/firebase/getFile?fileName=${fileName}&databaseUrl=${firebaseCredentials?.databaseUrl}&serviceAccount=${firebaseCredentials?.serviceAccount}&bucket=${firebaseCredentials?.bucket}`;
+			let params = [['fileName', fileName]];
+			if (awsCredentials) {
+				params.push(
+					['accessKey', awsCredentials.accessKey],
+					['secretKey', awsCredentials.secretKey],
+					['bucket', awsCredentials.bucket]
+				);
+			} else if (firebaseCredentials) {
+				params.push(
+					['databaseUrl', firebaseCredentials.databaseUrl],
+					['serviceAccount', firebaseCredentials.serviceAccount],
+					['bucket', firebaseCredentials.bucket]
+				);
+			} else {
+				throw new Error('No AWS or Firebase credentials.');
+			}
 
-        const response = await fetch(url);
-        const fileBase64 = await response.json();
-        return Buffer.from(fileBase64.file, 'base64');
+			const paramString = params.map(([k, v]) => {
+				return `${encodeURIComponent(k)}=${encodeURIComponent(v)}`
+			}).join('&');
+
+			const url = awsCredentials ? `/api/aws/getFile?${paramString}` : `/api/firebase/getFile?${paramString}`;
+			const response = await fetch(url);
+			const fileBase64 = await response.json();
+			return Buffer.from(fileBase64.file, 'base64');
     };
 
     const fetchAndHashFile = async (fileName: string) => {

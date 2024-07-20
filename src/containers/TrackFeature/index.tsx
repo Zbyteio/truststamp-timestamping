@@ -109,27 +109,25 @@ export default function TrackFeatureContainer() {
 			if (!email || !password) return;
 
 			(async () => {
-				const promises = [fetchOrganizations(email, password)];
+				const promises = [loadCredentials(email, password), fetchOrganizations(email, password)];
 
 				const params = new URLSearchParams(window.location.search);
 				if (params.has('id')) {
 					promises.push(fetchFeature(parseInt(params.get('id') as string)));
 				}
 
-				const [orgs, feature] = await Promise.all(promises);
+				const [creds, orgs, feature] = await Promise.all(promises);
 
 				if (!feature) {
 					setLoading(false);
 					return setSelectedOrg(orgs[0] ?? '');
 				}
 
-				const { accessKey, secretKey, bucket } = await fetchAwsCredentials(password);
-
 				// excluding zipped github files
 				const featureFiles = feature.files.filter((f: any) => !/[\dT]+Z\.zip$/.test(f.originalName));
 
 				const contents = await Promise.all(featureFiles.map((file: any) => {
-					return fetchFileContents(file.random, accessKey, secretKey, bucket);
+					return fetchFileContents(file.random, creds);
 				}));
 
 				const imageExts = ['png', 'jpg', 'jpeg', 'webp', 'svg'];
@@ -195,28 +193,50 @@ export default function TrackFeatureContainer() {
 			return feature;
     };
 
-		const fetchFileContents = async (fileName: string, accessKey: string, secretKey: string, bucket: string) => {
-			const url = `/api/aws/getFile?fileName=${fileName}&accessKey=${accessKey}&secretKey=${secretKey}&bucket=${bucket}`;
+		const fetchFileContents = async (fileName: string, creds: any) => {
+			let params = [['fileName', fileName]];
+			if (creds.service === 'aws') {
+				params.push(
+					['accessKey', creds.credentials.accessKey],
+					['secretKey', creds.credentials.secretKey],
+					['bucket', creds.credentials.bucket]
+				);
+			} else if (creds.service === 'firebase') {
+				params.push(
+					['databaseUrl', creds.credentials.databaseUrl],
+					['serviceAccount', creds.credentials.serviceAccount],
+					['bucket', creds.credentials.bucket]
+				);
+			} else {
+				throw new Error('No AWS or Firebase credentials.');
+			}
+
+			const paramString = params.map(([k, v]) => {
+				return `${encodeURIComponent(k)}=${encodeURIComponent(v)}`
+			}).join('&');
+
+			const url = creds.service === 'aws' ? `/api/aws/getFile?${paramString}` : `/api/firebase/getFile?${paramString}`;
 			const response = await fetch(url);
 			const fileBase64 = await response.json();
-			return fileBase64.file;
-		};
+			return Buffer.from(fileBase64.file, 'base64');
+    };
 
-		const fetchAwsCredentials = async (password: string) => {
-			const [accessKey, secretKey, bucket] = await Promise.all([
-				fetchCredential('aws', 'accessKey', password),
-				fetchCredential('aws', 'secretKey', password),
-				fetchCredential('database', 'bucket', password)
-			]);
-			return { accessKey, secretKey, bucket };
-		};
+		const loadCredentials = async (email: string, password: string) => {
+			const savedAccessKey = await fetchCredential('aws', 'accessKey', password);
+			const savedSecretKey = await fetchCredential('aws', 'secretKey', password);
+			const savedBucket = await fetchCredential('database', 'bucket', password);
+			const savedDatabaseUrl = await fetchCredential('firebase', 'databaseUrl', password);
+			const savedServiceAccount = await fetchCredential('firebase', 'serviceAccount', password);
 
-		const fetchFirebaseCredentials = async (password: string) => {
-			const [databaseUrl, serviceAccount] = await Promise.all([
-				fetchCredential('firebase', 'databaseUrl', password),
-				fetchCredential('firebase', 'serviceAccount', password),
-			]);
-			return { databaseUrl, serviceAccount };
+			if (savedAccessKey && savedSecretKey && savedBucket) {
+				const credentials = { accessKey: savedAccessKey, secretKey: savedSecretKey, bucket: savedBucket };
+				return { service: 'aws', credentials }
+			}
+
+			if (savedDatabaseUrl && savedServiceAccount && savedBucket) {
+				const credentials = { databaseUrl: savedDatabaseUrl, serviceAccount: savedServiceAccount, bucket: savedBucket };
+				return { service: 'firebase', credentials }
+			}
 		};
 
 		const fetchOrganizations = async (email: string, password: string) => {

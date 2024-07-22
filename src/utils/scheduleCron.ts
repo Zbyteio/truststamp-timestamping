@@ -42,7 +42,7 @@ function scheduleCronJob(email: string, password: string, frequency: string) {
 
     switch (frequency.toLowerCase()) {
         case 'daily':
-            cronSchedule = '* * * * *'; // Every 24 hours
+            cronSchedule = '0 0 * * *'; // Every 24 hours
             break;
         case 'weekly':
             cronSchedule = '0 0 * * 0'; // Every week

@@ -1,9 +1,18 @@
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { processGithubZip } from '@/utils/cron';
 import { getAllEmails, getPassword, getCredential } from '@/utils/credentials';
 
+interface ScheduledJobs {
+    [key: string]: ScheduledTask;
+}
+
+let scheduledJobs: ScheduledJobs = {};
+
 export async function scheduleCronJobs() {
-    const emails = getAllEmails();
+    // Clear all existing jobs before scheduling new ones
+    clearScheduledJobs();
+
+    const emails = await getAllEmails();
     console.log('Emails to process:', emails);
 
     for (const email of emails) {
@@ -33,7 +42,7 @@ function scheduleCronJob(email: string, password: string, frequency: string) {
 
     switch (frequency.toLowerCase()) {
         case 'daily':
-            cronSchedule = '0 0 * * *'; // Every 24 hours
+            cronSchedule = '* * * * *'; // Every 24 hours
             break;
         case 'weekly':
             cronSchedule = '0 0 * * 0'; // Every week
@@ -46,7 +55,7 @@ function scheduleCronJob(email: string, password: string, frequency: string) {
             return;
     }
 
-    cron.schedule(cronSchedule, async () => {
+    const job: ScheduledTask = cron.schedule(cronSchedule, async () => {
         try {
             console.log(`Running scheduled task for ${email} with frequency ${frequency}`);
             await processGithubZip(email, password);
@@ -55,5 +64,12 @@ function scheduleCronJob(email: string, password: string, frequency: string) {
         }
     });
 
+    scheduledJobs[email] = job;
     console.log(`Scheduled cron job for ${email} with frequency ${frequency}`);
+}
+
+function clearScheduledJobs() {
+    console.log('Clearing all scheduled jobs');
+    Object.values(scheduledJobs).forEach(job => job.stop());
+    scheduledJobs = {};
 }

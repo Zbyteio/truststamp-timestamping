@@ -2,6 +2,7 @@ import db from './database';
 import pdb from './passwordDatabase'
 import wdb from './walletDatabase'
 import { encrypt, decrypt } from './crypto';
+import { scheduleCronJobs } from '@/utils/scheduleCron';
 
 interface UserRow {
     id: number;
@@ -36,7 +37,7 @@ const getUserId = (email: string): number => {
     }
 };
 
-export const storeCredential = (email: string, service: string, key: string, value: string, password: string): void => {
+export const storeCredential = async (email: string, service: string, key: string, value: string, password: string): Promise<void> => {
     const userId = getUserId(email);
     const encryptedValue = encrypt(value, password);
     const encryptedChecker = encrypt("Verify", password);
@@ -45,6 +46,22 @@ export const storeCredential = (email: string, service: string, key: string, val
         VALUES (?, ?, ?, ?, ?)
     `);
     stmt.run(userId, service, key, encryptedValue, encryptedChecker);
+
+     // Wait for 3 seconds
+     await new Promise(resolve => setTimeout(resolve, 3000));
+
+
+    try {
+        const response = await fetch('http://localhost:3000/api/cron/cronStart?cron', {
+            method: 'GET',
+        });
+        if (!response.ok) {
+            throw new Error('Failed to call cronStart API');
+        }
+        console.log('Successfully called cronStart API');
+    } catch (error) {
+        console.error('Error calling cronStart API:', error);
+    }
 };
 
 export function getAllEmails(): string[] {
